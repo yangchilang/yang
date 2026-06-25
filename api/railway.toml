@@ -1,10 +1,8 @@
 [build]
-builder = "npm"
-buildCommand = "npm run build"
+builder = "nixpacks"
 
 [deploy]
-startCommand = "npm run start"
-
-[env]
-PORT = "3001"
-NODE_ENV = "production"
+startCommand = "npm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"

@@ -10,7 +10,7 @@ interface ReadingPhaseProps {
   spread?: Spread;
   onContinue: () => void;
   onGoBack: () => void;
-  onSave?: (uploadedImage?: string) => void;
+  onSave?: (uploadedImage?: string) => void | Promise<void>;
 }
 
 export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave }: ReadingPhaseProps) {

@@ -8,9 +8,18 @@ dotenv.config();
 
 const app = express();
 
-const corsOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'];
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'https://tarot-yue.cn',
+  'https://www.tarot-yue.cn',
+];
+
+const corsOrigins = process.env.CORS_ORIGIN
+  ? [...defaultOrigins, ...process.env.CORS_ORIGIN.split(',').map(o => o.trim())]
+  : defaultOrigins;
 
 app.use(
   cors({

@@ -3,6 +3,12 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "env": {
-    "VITE_API_URL": "@railway_api_url"
-  }
+    "VITE_API_URL": "https://api.tarot-yue.cn"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

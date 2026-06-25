@@ -9,7 +9,7 @@ import { HistoryPage } from './components/HistoryPage';
 import { HistoryDetailPage } from './components/HistoryDetailPage';
 import { SelectedCard, Phase, ReadingInput, Spread, ReadingRecord } from './types';
 import { getAIInterpretation } from './services/aiService';
-import { saveReadingRecord } from './services/historyService';
+import { saveReadingRecord, createReadingRecord } from './services/historyService';
 import { useAuthStore } from './store/authStore';
 
 type View = 'home' | 'login' | 'register' | 'history' | 'history-detail';
@@ -185,7 +185,7 @@ function App() {
   const [currentRecord, setCurrentRecord] = useState<ReadingRecord | null>(null);
   const [currentUserContext, setCurrentUserContext] = useState('');
 
-  const { checkAuth } = useAuthStore();
+  const { checkAuth, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -210,7 +210,7 @@ function App() {
     }
   };
 
-  const handleSaveReading = (uploadedImage?: string) => {
+  const handleSaveReading = async (uploadedImage?: string) => {
     const record: ReadingRecord = {
       id: Date.now().toString(),
       spread,
@@ -220,7 +220,16 @@ function App() {
       uploadedImage,
       createdAt: new Date().toISOString(),
     };
+    // Always save to localStorage as fallback
     saveReadingRecord(record);
+    // If authenticated, also save to backend
+    if (isAuthenticated) {
+      try {
+        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread);
+      } catch (error) {
+        console.error('Failed to save reading to backend:', error);
+      }
+    }
   };
 
   const handleContinueReading = () => {

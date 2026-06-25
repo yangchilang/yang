@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReadingRecord } from '../types';
-import { getReadingHistory, deleteReadingRecord, clearReadingHistory } from '../services/historyService';
+import {
+  getReadingHistory,
+  deleteReadingRecord,
+  clearReadingHistory,
+  fetchReadingHistory,
+  deleteBackendReading,
+} from '../services/historyService';
+import { useAuthStore } from '../store/authStore';
 
 interface HistoryPageProps {
   onBack: () => void;
@@ -11,19 +18,60 @@ interface HistoryPageProps {
 export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
-  useEffect(() => {
-    setRecords(getReadingHistory());
-  }, []);
-
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    deleteReadingRecord(id);
-    setRecords(getReadingHistory());
+  const loadRecords = async () => {
+    setIsLoading(true);
+    if (isAuthenticated) {
+      const data = await fetchReadingHistory();
+      if (data) {
+        const mapped: ReadingRecord[] = data.readings.map((r) => ({
+          id: String(r.id),
+          selectedCards: JSON.parse(r.cards),
+          interpretation: r.interpretation,
+          userContext: r.user_context || '',
+          createdAt: r.created_at,
+        }));
+        setRecords(mapped);
+      } else {
+        setRecords([]);
+      }
+    } else {
+      setRecords(getReadingHistory());
+    }
+    setIsLoading(false);
   };
 
-  const handleClearAll = () => {
-    clearReadingHistory();
+  useEffect(() => {
+    loadRecords();
+  }, [isAuthenticated]);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isAuthenticated) {
+      const numId = parseInt(id, 10);
+      if (!isNaN(numId)) {
+        await deleteBackendReading(numId);
+      }
+    } else {
+      deleteReadingRecord(id);
+    }
+    await loadRecords();
+  };
+
+  const handleClearAll = async () => {
+    if (isAuthenticated) {
+      // Backend doesn't support bulk delete; delete individually
+      for (const record of records) {
+        const numId = parseInt(record.id, 10);
+        if (!isNaN(numId)) {
+          await deleteBackendReading(numId);
+        }
+      }
+    } else {
+      clearReadingHistory();
+    }
     setRecords([]);
     setShowClearConfirm(false);
   };
@@ -65,6 +113,7 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
           </motion.h1>
           <p className="text-tarot-gray/70 font-crimson">
             共 {records.length} 条记录
+            {!isAuthenticated && '（本地存储）'}
           </p>
         </div>
       </div>
@@ -119,7 +168,16 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
         )}
       </AnimatePresence>
 
-      {records.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-20">
+          <motion.div
+            className="w-12 h-12 border-4 border-tarot-gold/20 border-t-tarot-gold rounded-full mx-auto"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+          <p className="text-tarot-gray/50 font-crimson mt-4">加载中...</p>
+        </div>
+      ) : records.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

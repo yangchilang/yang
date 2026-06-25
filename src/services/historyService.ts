@@ -1,6 +1,36 @@
-import { ReadingRecord } from '../types';
+import { ReadingRecord, SelectedCard, Spread } from '../types';
+import { apiRequest } from './api';
 
 const HISTORY_KEY = 'tarot_reading_history';
+
+export interface BackendReading {
+  id: number;
+  user_id: number;
+  cards: string;
+  interpretation: string;
+  user_context: string;
+  created_at: string;
+}
+
+export interface PaginatedReadings {
+  readings: BackendReading[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+function backendToRecord(r: BackendReading): ReadingRecord {
+  return {
+    id: String(r.id),
+    selectedCards: JSON.parse(r.cards) as SelectedCard[],
+    interpretation: r.interpretation,
+    userContext: r.user_context || '',
+    createdAt: r.created_at,
+  };
+}
 
 export function getReadingHistory(): ReadingRecord[] {
   try {
@@ -45,4 +75,55 @@ export function clearReadingHistory(): void {
 export function getReadingRecordById(id: string): ReadingRecord | undefined {
   const history = getReadingHistory();
   return history.find(r => r.id === id);
+}
+
+// Backend API wrappers
+
+export async function fetchReadingHistory(page = 1, limit = 10): Promise<PaginatedReadings | null> {
+  try {
+    const response = await apiRequest<PaginatedReadings>(`/api/readings?page=${page}&limit=${limit}`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error('Failed to fetch reading history from backend:', error);
+  }
+  return null;
+}
+
+export async function createReadingRecord(
+  cards: SelectedCard[],
+  interpretation: string,
+  userContext: string,
+  spread?: Spread
+): Promise<ReadingRecord | null> {
+  try {
+    const response = await apiRequest<BackendReading>('/api/readings', {
+      method: 'POST',
+      body: JSON.stringify({
+        cards,
+        interpretation,
+        user_context: userContext,
+        spread,
+      }),
+    });
+    if (response.success && response.data) {
+      return backendToRecord(response.data);
+    }
+  } catch (error) {
+    console.error('Failed to create reading on backend:', error);
+  }
+  return null;
+}
+
+export async function deleteBackendReading(id: number): Promise<boolean> {
+  try {
+    const response = await apiRequest<void>(`/api/readings/${id}`, {
+      method: 'DELETE',
+    });
+    return response.success;
+  } catch (error) {
+    console.error('Failed to delete reading from backend:', error);
+  }
+  return false;
 }

@@ -9,129 +9,101 @@ interface LoginProps {
 export function Login({ onNavigateToRegister }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { login, error, clearError } = useAuthStore();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    setIsSubmitting(true);
-    
     try {
       await login(username, password);
-    } catch (err) {
-      console.error('Login failed:', err);
-    } finally {
-      setIsSubmitting(false);
+      window.location.reload();
+    } catch {
+      // error handled by store
     }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-md mx-auto px-4"
     >
-      <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-tarot-gold/30 via-gray-300/30 to-tarot-gold/30 rounded-2xl blur-lg"></div>
-        
-        <div className="relative bg-white rounded-2xl p-8 border border-tarot-gold/20 shadow-lg">
-          <div className="text-center mb-8">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="text-6xl mb-4 text-tarot-gold"
-            >
-              ✦
-            </motion.div>
-            <h2 className="text-3xl font-decorative text-tarot-gray mb-2">欢迎回来</h2>
-            <p className="text-tarot-gray/60 font-crimson">开启你的神秘之旅</p>
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-tarot-gold/30 shadow-xl p-8">
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-4xl text-tarot-gold mb-4"
+          >
+            ✧
+          </motion.div>
+          <h1 className="text-3xl font-decorative text-tarot-gray mb-2">
+            欢迎回来
+          </h1>
+          <p className="text-tarot-gray/60 font-crimson">
+            登录以保存您的解读历史
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-tarot-gray/80 font-crimson text-sm mb-2">
+              用户名
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border-2 border-tarot-gold/20 bg-white/80 text-tarot-gray font-crimson focus:border-tarot-gold focus:outline-none focus:shadow-lg focus:shadow-tarot-gold/20 transition-all"
+              placeholder="请输入用户名"
+              required
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-tarot-gray/80 font-crimson mb-2">用户名</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-tarot-gold/60">✦</span>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="请输入用户名"
-                  required
-                  className="w-full bg-tarot-lightgray/30 border border-tarot-gold/30 rounded-lg px-10 py-3 text-tarot-gray placeholder-tarot-gray/40 focus:outline-none focus:border-tarot-gold focus:ring-1 focus:ring-tarot-gold/30 transition-all"
-                />
-              </div>
-            </div>
+          <div>
+            <label className="block text-tarot-gray/80 font-crimson text-sm mb-2">
+              密码
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border-2 border-tarot-gold/20 bg-white/80 text-tarot-gray font-crimson focus:border-tarot-gold focus:outline-none focus:shadow-lg focus:shadow-tarot-gold/20 transition-all"
+              placeholder="请输入密码"
+              required
+            />
+          </div>
 
-            <div>
-              <label className="block text-tarot-gray/80 font-crimson mb-2">密码</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-tarot-gold/60">✧</span>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="请输入密码"
-                  required
-                  className="w-full bg-tarot-lightgray/30 border border-tarot-gold/30 rounded-lg px-10 pr-12 py-3 text-tarot-gray placeholder-tarot-gray/40 focus:outline-none focus:border-tarot-gold focus:ring-1 focus:ring-tarot-gold/30 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-tarot-gray/60 hover:text-tarot-gold transition-colors"
-                >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-red-500 text-center font-crimson"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <motion.button
-              type="submit"
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-gradient-to-r from-tarot-gold to-yellow-500 text-white font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 font-crimson text-sm text-center"
             >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  登录中...
-                </span>
-              ) : (
-                '登录'
-              )}
-            </motion.button>
-          </form>
+              {error}
+            </motion.div>
+          )}
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6 text-center"
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 rounded-lg font-decorative text-lg bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <p className="text-tarot-gray/60 font-crimson">
-              还没有账号？{' '}
-              <button
-                onClick={onNavigateToRegister}
-                className="text-tarot-gold hover:text-yellow-600 transition-colors underline"
-              >
-                立即注册
-              </button>
-            </p>
-          </motion.div>
+            {isLoading ? '登录中...' : '登录'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-tarot-gray/60 font-crimson text-sm">
+            还没有账号？
+            <button
+              onClick={onNavigateToRegister}
+              className="ml-1 text-tarot-gold hover:text-tarot-gold/80 font-crimson transition-colors"
+            >
+              立即注册
+            </button>
+          </p>
         </div>
       </div>
     </motion.div>
