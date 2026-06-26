@@ -1,4 +1,5 @@
 import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
+import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs';
 
@@ -52,10 +53,30 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
   db.run(`CREATE INDEX IF NOT EXISTS idx_readings_user_id ON readings(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_readings_created_at ON readings(created_at DESC)`);
 
+  await seedDefaultUser();
+
   saveDatabase();
 
   console.log('✅ Database initialized successfully');
   return db;
+}
+
+async function seedDefaultUser(): Promise<void> {
+  if (!db) return;
+
+  const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'yue';
+  const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || '123456';
+
+  const result = db.exec('SELECT id FROM users WHERE username = ?', [defaultUsername]);
+
+  if (result.length > 0 && result[0].values.length > 0) {
+    console.log(`ℹ️  默认用户 ${defaultUsername} 已存在，跳过创建`);
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+  db.run('INSERT INTO users (username, password) VALUES (?, ?)', [defaultUsername, hashedPassword]);
+  console.log(`✅ 默认管理员账号已创建: ${defaultUsername}`);
 }
 
 export function getDatabase(): SqlJsDatabase {
