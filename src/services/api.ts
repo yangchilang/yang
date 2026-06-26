@@ -1,52 +1,55 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
-  message?: string;
 }
+
+// 生产环境 API 地址（硬编码确保构建时正确嵌入）
+const API_BASE_URL = 'https://yang-production-c0f7.up.railway.app';
 
 export function getApiUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
+export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = getApiUrl(path);
+  const token = localStorage.getItem('tarot_auth_token');
 
-  const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+    });
 
-  const token = localStorage.getItem('token');
-  if (token) {
-    (defaultHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: '请求失败' }));
+      return {
+        success: false,
+        error: error.error || `请求失败 (${response.status})`,
+      };
+    }
+
+    return response.json();
+  } catch (error) {
+    return {
+      success: false,
+      error: '网络连接失败，请检查网络后重试',
+    };
   }
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
-
-  const data = await response.json();
-
-  return data;
 }
 
 export function setAuthToken(token: string): void {
-  localStorage.setItem('token', token);
+  localStorage.setItem('tarot_auth_token', token);
 }
 
 export function removeAuthToken(): void {
-  localStorage.removeItem('token');
+  localStorage.removeItem('tarot_auth_token');
 }
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem('token');
+  return localStorage.getItem('tarot_auth_token');
 }
