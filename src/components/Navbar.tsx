@@ -1,9 +1,8 @@
-import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 
 interface NavbarProps {
-  view: 'home' | 'login' | 'history' | 'history-detail';
-  setView: (view: 'home' | 'login' | 'history' | 'history-detail') => void;
+  view: 'home' | 'history' | 'history-detail';
+  setView: (view: 'home' | 'history' | 'history-detail') => void;
 }
 
 export function Navbar({ view, setView }: NavbarProps) {
@@ -14,16 +13,16 @@ export function Navbar({ view, setView }: NavbarProps) {
     setView('home');
   };
 
+  const handleLogoClick = () => {
+    setView('home');
+  };
+
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm"
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm animate-fade-in-down">
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => setView('home')}
+            onClick={handleLogoClick}
             className="flex items-center gap-2 group"
           >
             <span className="text-2xl text-tarot-gold transition-transform group-hover:rotate-12">✧</span>
@@ -31,7 +30,8 @@ export function Navbar({ view, setView }: NavbarProps) {
           </button>
 
           <div className="flex items-center gap-4">
-            {view === 'home' && (
+            {/* 已登录时显示历史记录 */}
+            {isAuthenticated && view === 'home' && (
               <button
                 onClick={() => setView('history')}
                 className="px-4 py-2 text-tarot-gray/80 hover:text-tarot-gold font-crimson transition-colors flex items-center gap-1"
@@ -44,7 +44,7 @@ export function Navbar({ view, setView }: NavbarProps) {
             )}
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
-                <span className="text-tarot-gray/80 font-crimson">
+                <span className="text-tarot-gray/80 font-crimson hidden sm:inline">
                   欢迎, {user?.username}
                 </span>
                 <button
@@ -55,16 +55,13 @@ export function Navbar({ view, setView }: NavbarProps) {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setView('login')}
-                className="px-4 py-2 text-tarot-gray/80 hover:text-tarot-gold font-crimson transition-colors"
-              >
-                登录
-              </button>
+              <span className="text-tarot-gray/50 font-crimson text-sm">
+                未登录
+              </span>
             )}
           </div>
         </div>
       </div>
-    </motion.nav>
+    </nav>
   );
 }

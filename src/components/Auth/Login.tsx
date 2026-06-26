@@ -12,7 +12,8 @@ export function Login() {
     clearError();
     try {
       await login(username, password);
-      window.location.reload();
+      // 登录成功后，authStore 的 isAuthenticated 状态会自动更新
+      // ProtectedRoute 会响应状态变化，无需刷新页面
     } catch {
       // error handled by store
     }
