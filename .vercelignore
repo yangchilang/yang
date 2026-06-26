@@ -1,0 +1,24 @@
+# 后端代码在 Railway 运行，不需要部署到 Vercel
+api/
+
+# 开发工具
+node_modules/
+dist/
+.trae/
+
+# 测试文件
+test-api.js
+test-db.js
+add-user.js
+start-api.bat
+start-frontend.bat
+start.bat
+
+# 文档
+DEPLOY.md
+README.md
+域名配置指南.md
+
+# 环境文件
+.env
+.env.example
