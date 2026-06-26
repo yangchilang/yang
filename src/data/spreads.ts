@@ -11,6 +11,18 @@ export interface Spread {
   positions: SpreadPosition[];
 }
 
+export const defaultThreeCardSpread: Spread = {
+  id: 'three-card',
+  name: '三张牌牌阵',
+  description: '经典的三张牌解读，适用于任何问题',
+  category: '默认牌阵',
+  positions: [
+    { position: 1, meaning: '过去' },
+    { position: 2, meaning: '现在' },
+    { position: 3, meaning: '未来' },
+  ]
+};
+
 export const spreads: Spread[] = [
   // 感情复合类
   {
