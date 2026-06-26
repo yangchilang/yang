@@ -16,7 +16,7 @@ export default defineConfig({
       },
     },
   },
-  build: {
+  build: {chunkSizeWarningLimit: 1000,
     outDir: 'dist',
     sourcemap: false,
   },
