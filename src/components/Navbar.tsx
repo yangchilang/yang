@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 
 interface NavbarProps {
-  view: 'home' | 'login' | 'register' | 'history' | 'history-detail';
-  setView: (view: 'home' | 'login' | 'register' | 'history' | 'history-detail') => void;
+  view: 'home' | 'login' | 'history' | 'history-detail';
+  setView: (view: 'home' | 'login' | 'history' | 'history-detail') => void;
 }
 
 export function Navbar({ view, setView }: NavbarProps) {
@@ -27,7 +27,7 @@ export function Navbar({ view, setView }: NavbarProps) {
             className="flex items-center gap-2 group"
           >
             <span className="text-2xl text-tarot-gold transition-transform group-hover:rotate-12">✧</span>
-            <span className="font-decorative text-tarot-gray text-xl">AI塔罗</span>
+            <span className="font-decorative text-tarot-gray text-xl">shiyue-Tarot</span>
           </button>
 
           <div className="flex items-center gap-4">
@@ -55,20 +55,12 @@ export function Navbar({ view, setView }: NavbarProps) {
                 </button>
               </div>
             ) : (
-              <>
-                <button
-                  onClick={() => setView('login')}
-                  className="px-4 py-2 text-tarot-gray/80 hover:text-tarot-gold font-crimson transition-colors"
-                >
-                  登录
-                </button>
-                <button
-                  onClick={() => setView('register')}
-                  className="px-4 py-2 bg-tarot-gold/10 hover:bg-tarot-gold/20 text-tarot-gray rounded-lg font-crimson transition-all border border-tarot-gold/30"
-                >
-                  注册
-                </button>
-              </>
+              <button
+                onClick={() => setView('login')}
+                className="px-4 py-2 text-tarot-gray/80 hover:text-tarot-gold font-crimson transition-colors"
+              >
+                登录
+              </button>
             )}
           </div>
         </div>

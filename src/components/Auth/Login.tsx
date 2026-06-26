@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 
-interface LoginProps {
-  onNavigateToRegister: () => void;
-}
-
-export function Login({ onNavigateToRegister }: LoginProps) {
+export function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading, error, clearError } = useAuthStore();
@@ -94,17 +90,7 @@ export function Login({ onNavigateToRegister }: LoginProps) {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-tarot-gray/60 font-crimson text-sm">
-            还没有账号？
-            <button
-              onClick={onNavigateToRegister}
-              className="ml-1 text-tarot-gold hover:text-tarot-gold/80 font-crimson transition-colors"
-            >
-              立即注册
-            </button>
-          </p>
-        </div>
+        
       </div>
     </motion.div>
   );

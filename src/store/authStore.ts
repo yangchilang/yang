@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { login, register, logout, getCurrentUser, User } from '../services/authService';
+import { login, logout, getCurrentUser, User } from '../services/authService';
 
 interface AuthState {
   user: User | null;
@@ -7,7 +7,6 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
   clearError: () => void;
@@ -31,24 +30,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : '登录失败',
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-
-  register: async (username: string, password: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const response = await register({ username, password });
-      set({
-        user: response.user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : '注册失败',
         isLoading: false,
       });
       throw error;

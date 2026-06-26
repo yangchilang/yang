@@ -334,7 +334,7 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
               onClick={onContinue}
               className="px-8 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all"
             >
-              继续解读下一位
+              继续解读
             </button>
           </motion.div>
         )}

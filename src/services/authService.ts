@@ -5,11 +5,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RegisterRequest {
-  username: string;
-  password: string;
-}
-
 export interface AuthResponse {
   user: {
     id: number;
@@ -39,20 +34,6 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
   }
 
   throw new Error(response.error || '登录失败');
-}
-
-export async function register(data: RegisterRequest): Promise<AuthResponse> {
-  const response = await apiRequest<AuthResponse>('/api/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-
-  if (response.success && response.data) {
-    setAuthToken(response.data.token);
-    return response.data;
-  }
-
-  throw new Error(response.error || '注册失败');
 }
 
 export async function getCurrentUser(): Promise<User> {

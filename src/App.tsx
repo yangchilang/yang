@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { InputPhase } from './components/InputPhase';
 import { ReadingPhase } from './components/ReadingPhase';
 import { Login } from './components/Auth/Login';
-import { Register } from './components/Auth/Register';
 import { Navbar } from './components/Navbar';
 import { HistoryPage } from './components/HistoryPage';
 import { HistoryDetailPage } from './components/HistoryDetailPage';
@@ -12,7 +11,7 @@ import { getAIInterpretation } from './services/aiService';
 import { saveReadingRecord, createReadingRecord } from './services/historyService';
 import { useAuthStore } from './store/authStore';
 
-type View = 'home' | 'login' | 'register' | 'history' | 'history-detail';
+type View = 'home' | 'login' | 'history' | 'history-detail';
 type HistoryStack = 'home' | 'spread-selector' | 'card-selection' | 'reading';
 
 function StarryBackground() {
@@ -265,9 +264,7 @@ function App() {
   const renderContent = () => {
     switch (view) {
       case 'login':
-        return <Login onNavigateToRegister={() => setView('register')} />;
-      case 'register':
-        return <Register onNavigateToLogin={() => setView('login')} />;
+        return <Login />;
       case 'history':
         return (
           <HistoryPage
@@ -338,7 +335,7 @@ function App() {
       <footer className="relative z-10 text-center py-8 text-tarot-gray/50 font-crimson text-sm">
         <div className="flex justify-center gap-4 mb-2">
           <span className="text-tarot-gold/60">✦</span>
-          <span>AI 塔罗解读</span>
+          <span>塔罗解读</span>
           <span className="text-tarot-gold/60">✦</span>
         </div>
         <p>神秘的智慧等待着你去发现</p>
