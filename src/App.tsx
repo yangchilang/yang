@@ -5,6 +5,7 @@ import { ReadingPhase } from './components/ReadingPhase';
 import { Navbar } from './components/Navbar';
 import { MobileOptimizedBackground } from './components/MobileOptimizedBackground';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Login } from './components/Auth/Login';
 import { SelectedCard, ReadingInput, Spread, ReadingRecord } from './types';
 import { getAIInterpretation } from './services/aiService';
 import { saveReadingRecord, createReadingRecord } from './services/historyService';
@@ -90,6 +91,9 @@ function App() {
   const renderContent = () => {
     switch (view) {
       case 'home':
+        if (!isAuthenticated) {
+          return <Login />;
+        }
         return (
           <Suspense
             fallback={
