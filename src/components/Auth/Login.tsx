@@ -1,11 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
+
+const REMEMBER_KEY = 'tarot_remember_username';
 
 export function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const { login, isLoading, error, clearError } = useAuthStore();
+
+  useEffect(() => {
+    // 加载记住的用户名
+    const savedUsername = localStorage.getItem(REMEMBER_KEY);
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,6 +26,12 @@ export function Login() {
       await login(username, password);
       // 登录成功后，authStore 的 isAuthenticated 状态会自动更新
       // ProtectedRoute 会响应状态变化，无需刷新页面
+      // 处理记住密码
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, username);
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
     } catch {
       // error handled by store
     }
@@ -70,6 +88,19 @@ export function Login() {
               placeholder="请输入密码"
               required
             />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 text-tarot-gold bg-white border-tarot-gold/30 rounded focus:ring-tarot-gold focus:ring-offset-0"
+            />
+            <label htmlFor="rememberMe" className="ml-2 text-tarot-gray/70 font-crimson text-sm cursor-pointer">
+              记住用户名
+            </label>
           </div>
 
           {error && (

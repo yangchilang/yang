@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { login, logout, getCurrentUser, User } from '../services/authService';
+import { getAuthToken } from '../services/api';
 
 interface AuthState {
   user: User | null;
@@ -46,6 +47,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
+    // 如果本地没有 token，直接保持未登录状态
+    const token = getAuthToken();
+    if (!token) {
+      set({ isLoading: false, isAuthenticated: false, user: null });
+      return;
+    }
+
     set({ isLoading: true });
     try {
       const user = await getCurrentUser();
@@ -55,11 +63,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     } catch (error) {
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      // 网络错误或其他错误时，如果有 token 存在，保持登录状态（乐观策略）
+      // 只有显式调用 logout 才会退出登录
+      set({ isLoading: false });
     }
   },
 
