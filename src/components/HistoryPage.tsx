@@ -12,12 +12,11 @@ import {
 import { useAuthStore } from '../store/authStore';
 
 interface HistoryPageProps {
-  onBack: () => void;
   onViewDetail: (record: ReadingRecord) => void;
   onNewReading: () => void;
 }
 
-export function HistoryPage({ onBack, onViewDetail, onNewReading }: HistoryPageProps) {
+export function HistoryPage({ onViewDetail, onNewReading }: HistoryPageProps) {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

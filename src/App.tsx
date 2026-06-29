@@ -5,7 +5,7 @@ import { ReadingPhase } from './components/ReadingPhase';
 import { Navbar } from './components/Navbar';
 import { MobileOptimizedBackground } from './components/MobileOptimizedBackground';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { SelectedCard, Phase, ReadingInput, Spread, ReadingRecord } from './types';
+import { SelectedCard, ReadingInput, Spread, ReadingRecord } from './types';
 import { getAIInterpretation } from './services/aiService';
 import { saveReadingRecord, createReadingRecord } from './services/historyService';
 import { useAuthStore } from './store/authStore';
@@ -15,7 +15,6 @@ const HistoryPage = lazy(() => import('./components/HistoryPage').then(m => ({ d
 const HistoryDetailPage = lazy(() => import('./components/HistoryDetailPage').then(m => ({ default: m.HistoryDetailPage })));
 
 type View = 'home' | 'history-detail' | 'new-reading' | 'reading';
-type HistoryStack = 'new-reading' | 'card-selection' | 'reading';
 
 function App() {
   const [selectedCards, setSelectedCards] = useState<SelectedCard[]>([]);
@@ -106,7 +105,6 @@ function App() {
             }
           >
             <HistoryPage
-              onBack={() => setView('home')}
               onViewDetail={handleViewHistoryDetail}
               onNewReading={() => setView('new-reading')}
             />
@@ -141,7 +139,7 @@ function App() {
                 key="input"
                 className="animate-fade-in-left"
               >
-                <InputPhase onSubmit={handleSubmit} onGoBack={() => setView('home')} />
+                <InputPhase onSubmit={handleSubmit} />
               </div>
             </AnimatePresence>
           </ProtectedRoute>
@@ -179,7 +177,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
       <MobileOptimizedBackground />
 
-      <Navbar view={view} setView={setView} />
+      <Navbar setView={setView} />
 
       <div className="relative z-10 py-24 md:py-32">
         {renderContent()}

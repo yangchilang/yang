@@ -7,10 +7,9 @@ import { SelectedCard, ReadingInput, Spread } from '../types';
 
 interface InputPhaseProps {
   onSubmit: (input: ReadingInput) => void;
-  onGoBack: () => void;
 }
 
-export function InputPhase({ onSubmit, onGoBack }: InputPhaseProps) {
+export function InputPhase({ onSubmit }: InputPhaseProps) {
   const [selectedSpread, setSelectedSpread] = useState<Spread | null>(null);
   const [selectedCards, setSelectedCards] = useState<SelectedCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);

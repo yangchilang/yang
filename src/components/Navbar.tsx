@@ -1,11 +1,10 @@
 import { useAuthStore } from '../store/authStore';
 
 interface NavbarProps {
-  view: 'home' | 'history-detail' | 'new-reading' | 'reading';
   setView: (view: 'home' | 'history-detail' | 'new-reading' | 'reading') => void;
 }
 
-export function Navbar({ view, setView }: NavbarProps) {
+export function Navbar({ setView }: NavbarProps) {
   const { user, isAuthenticated, logout } = useAuthStore();
 
   const handleLogout = () => {
