@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 
-const REMEMBER_KEY = 'tarot_remember_username';
+const CREDENTIALS_KEY = 'tarot_remember_credentials';
 
 export function Login() {
   const [username, setUsername] = useState('');
@@ -11,11 +11,19 @@ export function Login() {
   const { login, isLoading, error, clearError } = useAuthStore();
 
   useEffect(() => {
-    // 加载记住的用户名
-    const savedUsername = localStorage.getItem(REMEMBER_KEY);
-    if (savedUsername) {
-      setUsername(savedUsername);
-      setRememberMe(true);
+    // 加载记住的凭据（sessionStorage，关闭网页后自动清除）
+    const savedCredentials = sessionStorage.getItem(CREDENTIALS_KEY);
+    if (savedCredentials) {
+      try {
+        const { username: savedUsername, password: savedPassword } = JSON.parse(savedCredentials);
+        setUsername(savedUsername || '');
+        setPassword(savedPassword || '');
+        if (savedUsername) {
+          setRememberMe(true);
+        }
+      } catch {
+        // 解析失败，忽略
+      }
     }
   }, []);
 
@@ -26,11 +34,11 @@ export function Login() {
       await login(username, password);
       // 登录成功后，authStore 的 isAuthenticated 状态会自动更新
       // ProtectedRoute 会响应状态变化，无需刷新页面
-      // 处理记住密码
+      // 处理记住密码（sessionStorage，关闭网页后自动清除）
       if (rememberMe) {
-        localStorage.setItem(REMEMBER_KEY, username);
+        sessionStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));
       } else {
-        localStorage.removeItem(REMEMBER_KEY);
+        sessionStorage.removeItem(CREDENTIALS_KEY);
       }
     } catch {
       // error handled by store
@@ -99,7 +107,7 @@ export function Login() {
               className="w-4 h-4 text-tarot-gold bg-white border-tarot-gold/30 rounded focus:ring-tarot-gold focus:ring-offset-0"
             />
             <label htmlFor="rememberMe" className="ml-2 text-tarot-gray/70 font-crimson text-sm cursor-pointer">
-              记住用户名
+              记住密码
             </label>
           </div>
 

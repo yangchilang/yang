@@ -22,14 +22,6 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      window.scrollTo(0, 0);
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
   const handleSelectSpread = (spread: Spread) => {
     setSelectedSpread(spread);
     setSelectedCards([]);

@@ -12,7 +12,7 @@ export function getApiUrl(path: string): string {
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = getApiUrl(path);
-  const token = localStorage.getItem('tarot_auth_token');
+  const token = sessionStorage.getItem('tarot_auth_token');
 
   try {
     const response = await fetch(url, {
@@ -42,13 +42,13 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 }
 
 export function setAuthToken(token: string): void {
-  localStorage.setItem('tarot_auth_token', token);
+  sessionStorage.setItem('tarot_auth_token', token);
 }
 
 export function removeAuthToken(): void {
-  localStorage.removeItem('tarot_auth_token');
+  sessionStorage.removeItem('tarot_auth_token');
 }
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem('tarot_auth_token');
+  return sessionStorage.getItem('tarot_auth_token');
 }
