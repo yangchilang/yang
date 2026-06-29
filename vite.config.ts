@@ -8,10 +8,6 @@ export default defineConfig({
       '@': '/src',
     },
   },
-  define: {
-    // 直接注入生产环境 API 地址，确保构建时正确嵌入
-    'import.meta.env.VITE_API_URL': JSON.stringify('https://yang-production-c0f7.up.railway.app'),
-  },
   server: {
     proxy: {
       '/api': {

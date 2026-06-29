@@ -4,11 +4,8 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// 生产环境 API 地址（硬编码确保构建时正确嵌入）
-const API_BASE_URL = 'https://yang-production-c0f7.up.railway.app';
-
 export function getApiUrl(path: string): string {
-  return `${API_BASE_URL}${path}`;
+  return path;
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
