@@ -7,18 +7,23 @@ import {
   clearReadingHistory,
   fetchReadingHistory,
   deleteBackendReading,
+  searchReadingByOrderId,
 } from '../services/historyService';
 import { useAuthStore } from '../store/authStore';
 
 interface HistoryPageProps {
   onBack: () => void;
   onViewDetail: (record: ReadingRecord) => void;
+  onNewReading: () => void;
 }
 
-export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
+export function HistoryPage({ onBack, onViewDetail, onNewReading }: HistoryPageProps) {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchResult, setSearchResult] = useState<ReadingRecord | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
   const loadRecords = async () => {
@@ -32,6 +37,7 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
           interpretation: r.interpretation,
           userContext: r.user_context || '',
           createdAt: r.created_at,
+          orderId: r.order_id,
         }));
         setRecords(mapped);
       } else {
@@ -41,6 +47,22 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
       setRecords(getReadingHistory());
     }
     setIsLoading(false);
+  };
+
+  const handleSearchByOrderId = async () => {
+    if (!searchOrderId.trim()) {
+      setSearchResult(null);
+      return;
+    }
+    setIsSearching(true);
+    const result = await searchReadingByOrderId(searchOrderId.trim());
+    setSearchResult(result);
+    setIsSearching(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchOrderId('');
+    setSearchResult(null);
   };
 
   useEffect(() => {
@@ -93,29 +115,107 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-4xl mx-auto px-4"
     >
-      <div className="relative mb-8">
-        <button
-          onClick={onBack}
-          className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2 text-tarot-gray hover:text-tarot-gold transition-colors font-crimson"
+      <div className="text-center mb-8">
+        <motion.h1
+          className="text-3xl md:text-4xl font-decorative text-tarot-gray mb-2"
+          animate={{ opacity: [0, 1], scale: [0.9, 1] }}
+          transition={{ duration: 0.8 }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
-        <div className="text-center">
-          <motion.h1
-            className="text-3xl md:text-4xl font-decorative text-tarot-gray mb-2"
-            animate={{ opacity: [0, 1], scale: [0.9, 1] }}
-            transition={{ duration: 0.8 }}
+          历史解读记录
+        </motion.h1>
+        <p className="text-tarot-gray/70 font-crimson">
+          共 {records.length} 条记录
+          {!isAuthenticated && '（本地存储）'}
+        </p>
+      </div>
+
+      {/* 订单号搜索 */}
+      <div className="bg-white rounded-xl p-4 mb-6 border border-tarot-gold/20 shadow-sm">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={searchOrderId}
+            onChange={(e) => setSearchOrderId(e.target.value)}
+            placeholder="输入订单号搜索..."
+            className="flex-1 bg-tarot-lightgray/30 border-2 border-tarot-gold/30 rounded-lg px-4 py-2 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors"
+          />
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSearchByOrderId}
+            disabled={isSearching}
+            className="px-6 py-2 rounded-lg font-crimson bg-tarot-gold text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all disabled:opacity-50"
           >
-            历史解读记录
-          </motion.h1>
-          <p className="text-tarot-gray/70 font-crimson">
-            共 {records.length} 条记录
-            {!isAuthenticated && '（本地存储）'}
-          </p>
+            {isSearching ? '搜索中...' : '搜索'}
+          </motion.button>
+          {searchOrderId && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleClearSearch}
+              className="px-4 py-2 rounded-lg font-crimson border-2 border-tarot-gold/30 text-tarot-gray hover:border-tarot-gold transition-colors"
+            >
+              清除
+            </motion.button>
+          )}
         </div>
+      </div>
+
+      {/* 搜索结果 */}
+      <AnimatePresence>
+        {searchResult && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-tarot-gold/10 rounded-xl p-6 mb-6 border-2 border-tarot-gold"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-decorative text-tarot-gold">搜索结果</h3>
+              <span className="text-tarot-gold/60 font-crimson text-sm">
+                订单号: {searchResult.orderId}
+              </span>
+            </div>
+            <div
+              onClick={() => onViewDetail(searchResult)}
+              className="cursor-pointer"
+            >
+              <p className="text-tarot-gray/70 font-crimson text-sm mb-2">
+                {formatDate(searchResult.createdAt)}
+              </p>
+              <p className="text-tarot-gray/60 font-crimson line-clamp-2">
+                {searchResult.interpretation.substring(0, 100)}...
+              </p>
+              <div className="mt-3 text-tarot-gold font-crimson text-sm flex items-center gap-1">
+                查看详情
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        {searchOrderId && !searchResult && !isSearching && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-4 mb-6 text-tarot-gray/50 font-crimson"
+          >
+            未找到订单号为 "{searchOrderId}" 的记录
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 新建解读按钮 */}
+      <div className="flex justify-center mb-6">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onNewReading}
+          className="px-8 py-3 rounded-xl font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
+        >
+          新建解读
+        </motion.button>
       </div>
 
       {records.length > 0 && (
@@ -186,7 +286,7 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
           <div className="text-tarot-gold/30 text-6xl mb-4">📜</div>
           <p className="text-tarot-gray/50 font-crimson mb-6">暂无历史记录</p>
           <button
-            onClick={onBack}
+            onClick={onNewReading}
             className="px-6 py-2 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
           >
             开始第一次解读
@@ -212,6 +312,11 @@ export function HistoryPage({ onBack, onViewDetail }: HistoryPageProps) {
                   <p className="text-tarot-gray/50 font-crimson text-sm">
                     {formatDate(record.createdAt)}
                   </p>
+                  {record.orderId && (
+                    <p className="text-tarot-gold/60 font-crimson text-xs mt-1">
+                      订单号: {record.orderId}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={(e) => handleDelete(record.id, e)}

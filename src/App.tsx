@@ -14,19 +14,18 @@ import { useAuthStore } from './store/authStore';
 const HistoryPage = lazy(() => import('./components/HistoryPage').then(m => ({ default: m.HistoryPage })));
 const HistoryDetailPage = lazy(() => import('./components/HistoryDetailPage').then(m => ({ default: m.HistoryDetailPage })));
 
-type View = 'home' | 'history' | 'history-detail';
-type HistoryStack = 'home' | 'spread-selector' | 'card-selection' | 'reading';
+type View = 'home' | 'history-detail' | 'new-reading' | 'reading';
+type HistoryStack = 'new-reading' | 'card-selection' | 'reading';
 
 function App() {
-  const [phase, setPhase] = useState<Phase>('input');
   const [selectedCards, setSelectedCards] = useState<SelectedCard[]>([]);
   const [interpretation, setInterpretation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<View>('home');
   const [spread, setSpread] = useState<Spread | undefined>(undefined);
-  const [historyStack, setHistoryStack] = useState<HistoryStack>('spread-selector');
   const [currentRecord, setCurrentRecord] = useState<ReadingRecord | null>(null);
   const [currentUserContext, setCurrentUserContext] = useState('');
+  const [orderId, setOrderId] = useState('');
 
   const { checkAuth, isAuthenticated } = useAuthStore();
 
@@ -38,8 +37,8 @@ function App() {
     setSelectedCards(input.selectedCards);
     setSpread(input.spread);
     setCurrentUserContext(input.userContext);
-    setPhase('reading');
-    setHistoryStack('reading');
+    setOrderId(input.orderId || '');
+    setView('reading');
     setIsLoading(true);
 
     try {
@@ -62,13 +61,14 @@ function App() {
       userContext: currentUserContext,
       uploadedImage,
       createdAt: new Date().toISOString(),
+      orderId,
     };
     // Always save to localStorage as fallback
     saveReadingRecord(record);
     // If authenticated, also save to backend
     if (isAuthenticated) {
       try {
-        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread);
+        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId);
       } catch (error) {
         console.error('Failed to save reading to backend:', error);
       }
@@ -79,8 +79,8 @@ function App() {
     setSelectedCards([]);
     setInterpretation('');
     setCurrentUserContext('');
-    setPhase('input');
-    setHistoryStack('spread-selector');
+    setOrderId('');
+    setView('home');
   };
 
   const handleViewHistoryDetail = (record: ReadingRecord) => {
@@ -88,26 +88,9 @@ function App() {
     setView('history-detail');
   };
 
-  const handleGoBack = () => {
-    switch (historyStack) {
-      case 'reading':
-        setPhase('input');
-        setHistoryStack('card-selection');
-        break;
-      case 'card-selection':
-        setPhase('input');
-        setHistoryStack('spread-selector');
-        break;
-      case 'spread-selector':
-        break;
-      default:
-        break;
-    }
-  };
-
   const renderContent = () => {
     switch (view) {
-      case 'history':
+      case 'home':
         return (
           <Suspense
             fallback={
@@ -125,6 +108,7 @@ function App() {
             <HistoryPage
               onBack={() => setView('home')}
               onViewDetail={handleViewHistoryDetail}
+              onNewReading={() => setView('new-reading')}
             />
           </Suspense>
         );
@@ -145,43 +129,49 @@ function App() {
           >
             <HistoryDetailPage
               record={currentRecord}
-              onBack={() => setView('history')}
+              onBack={() => setView('home')}
             />
           </Suspense>
         ) : null;
-      default:
+      case 'new-reading':
         return (
           <ProtectedRoute>
             <AnimatePresence mode="wait">
-              {phase === 'input' ? (
-                <div
-                  key="input"
-                  className="animate-fade-in-left"
-                >
-                  <InputPhase onSubmit={handleSubmit} onGoBack={handleGoBack} />
-                </div>
-              ) : (
-                <div
-                  key="reading"
-                  className="animate-fade-in-right"
-                >
-                  {isLoading ? (
-                    <LoadingState />
-                  ) : (
-                    <ReadingPhase
-                      selectedCards={selectedCards}
-                      interpretation={interpretation}
-                      spread={spread}
-                      onContinue={handleContinueReading}
-                      onGoBack={handleGoBack}
-                      onSave={handleSaveReading}
-                    />
-                  )}
-                </div>
-              )}
+              <div
+                key="input"
+                className="animate-fade-in-left"
+              >
+                <InputPhase onSubmit={handleSubmit} onGoBack={() => setView('home')} />
+              </div>
             </AnimatePresence>
           </ProtectedRoute>
         );
+      case 'reading':
+        return (
+          <ProtectedRoute>
+            <AnimatePresence mode="wait">
+              <div
+                key="reading"
+                className="animate-fade-in-right"
+              >
+                {isLoading ? (
+                  <LoadingState />
+                ) : (
+                  <ReadingPhase
+                    selectedCards={selectedCards}
+                    interpretation={interpretation}
+                    spread={spread}
+                    onContinue={handleContinueReading}
+                    onGoBack={() => setView('new-reading')}
+                    onSave={handleSaveReading}
+                  />
+                )}
+              </div>
+            </AnimatePresence>
+          </ProtectedRoute>
+        );
+      default:
+        return null;
     }
   };
 

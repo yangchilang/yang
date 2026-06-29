@@ -16,6 +16,7 @@ export function InputPhase({ onSubmit, onGoBack }: InputPhaseProps) {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [isReversed, setIsReversed] = useState(false);
   const [userContext, setUserContext] = useState('');
+  const [orderId, setOrderId] = useState('');
   
   const selectedCardsRef = useRef<HTMLDivElement>(null);
 
@@ -101,7 +102,7 @@ export function InputPhase({ onSubmit, onGoBack }: InputPhaseProps) {
     >
       {/* 返回按钮 */}
       <button
-        onClick={onGoBack}
+        onClick={handleBackToSpreadSelection}
         className="flex items-center gap-2 text-tarot-gray hover:text-tarot-gold transition-colors font-crimson mb-6"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +269,7 @@ export function InputPhase({ onSubmit, onGoBack }: InputPhaseProps) {
             onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               setTimeout(() => {
-                onSubmit({ selectedCards, userContext, spread: selectedSpread });
+                onSubmit({ selectedCards, userContext, spread: selectedSpread, orderId });
               }, 500);
             }}
             className="w-full py-4 rounded-xl font-decorative text-xl bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-xl hover:shadow-tarot-gold/30 transition-all"
@@ -276,6 +277,21 @@ export function InputPhase({ onSubmit, onGoBack }: InputPhaseProps) {
             开始 AI 解读
           </motion.button>
         )}
+      </div>
+
+      {/* 订单号 */}
+      <div className="bg-white rounded-xl p-6 mb-8 border border-tarot-gold/20 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-decorative text-tarot-gray">订单号</h2>
+          <span className="text-tarot-gray/50 text-sm font-crimson">用于记录和查询</span>
+        </div>
+        <input
+          type="text"
+          value={orderId}
+          onChange={(e) => setOrderId(e.target.value)}
+          placeholder="请输入订单号..."
+          className="w-full bg-tarot-lightgray/30 border-2 border-tarot-gold/30 rounded-lg px-4 py-3 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors"
+        />
       </div>
 
       {/* 占卜背景 */}

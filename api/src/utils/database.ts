@@ -45,6 +45,7 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
       cards TEXT NOT NULL,
       interpretation TEXT NOT NULL,
       user_context TEXT,
+      order_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
@@ -52,6 +53,22 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_readings_user_id ON readings(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_readings_created_at ON readings(created_at DESC)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_readings_order_id ON readings(order_id)`);
+  
+  // 迁移：为已存在的表添加 order_id 列（如果不存在）
+  try {
+    const columns = db.exec("PRAGMA table_info(readings)");
+    if (columns.length > 0) {
+      const columnNames = columns[0].values.map(row => row[1]);
+      if (!columnNames.includes('order_id')) {
+        db.run('ALTER TABLE readings ADD COLUMN order_id TEXT');
+        db.run('CREATE INDEX IF NOT EXISTS idx_readings_order_id ON readings(order_id)');
+        console.log('✅ Added order_id column to readings table');
+      }
+    }
+  } catch (e) {
+    console.log('ℹ️  order_id column migration skipped (table may not exist yet)');
+  }
 
   await seedDefaultUser();
 

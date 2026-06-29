@@ -1,8 +1,8 @@
 import { useAuthStore } from '../store/authStore';
 
 interface NavbarProps {
-  view: 'home' | 'history' | 'history-detail';
-  setView: (view: 'home' | 'history' | 'history-detail') => void;
+  view: 'home' | 'history-detail' | 'new-reading' | 'reading';
+  setView: (view: 'home' | 'history-detail' | 'new-reading' | 'reading') => void;
 }
 
 export function Navbar({ view, setView }: NavbarProps) {
@@ -30,18 +30,6 @@ export function Navbar({ view, setView }: NavbarProps) {
           </button>
 
           <div className="flex items-center gap-4">
-            {/* 已登录时显示历史记录 */}
-            {isAuthenticated && view === 'home' && (
-              <button
-                onClick={() => setView('history')}
-                className="px-4 py-2 text-tarot-gray/80 hover:text-tarot-gold font-crimson transition-colors flex items-center gap-1"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                历史记录
-              </button>
-            )}
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
                 <span className="text-tarot-gray/80 font-crimson hidden sm:inline">

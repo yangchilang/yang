@@ -12,6 +12,7 @@ export interface Reading {
   cards: string;
   interpretation: string;
   user_context: string;
+  order_id?: string;
   created_at: string;
 }
 

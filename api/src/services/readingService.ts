@@ -5,14 +5,15 @@ export function createReading(
   userId: number,
   cards: SelectedCard[],
   interpretation: string,
-  userContext: string
+  userContext: string,
+  orderId?: string
 ): Reading {
   const db = getDatabase();
   const cardsJson = JSON.stringify(cards);
 
   db.run(
-    'INSERT INTO readings (user_id, cards, interpretation, user_context) VALUES (?, ?, ?, ?)',
-    [userId, cardsJson, interpretation, userContext]
+    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id) VALUES (?, ?, ?, ?, ?)',
+    [userId, cardsJson, interpretation, userContext, orderId || null]
   );
 
   saveDatabase();
@@ -29,7 +30,8 @@ export function createReading(
     cards: readingRow[2] as string,
     interpretation: readingRow[3] as string,
     user_context: readingRow[4] as string,
-    created_at: readingRow[5] as string,
+    order_id: readingRow[5] as string | undefined,
+    created_at: readingRow[6] as string,
   };
 }
 
@@ -58,7 +60,8 @@ export function getReadingsByUserId(
     cards: row[2] as string,
     interpretation: row[3] as string,
     user_context: row[4] as string,
-    created_at: row[5] as string,
+    order_id: row[5] as string | undefined,
+    created_at: row[6] as string,
   }));
 
   return { readings, total };
@@ -86,7 +89,35 @@ export function getReadingById(
     cards: row[2] as string,
     interpretation: row[3] as string,
     user_context: row[4] as string,
-    created_at: row[5] as string,
+    order_id: row[5] as string | undefined,
+    created_at: row[6] as string,
+  };
+}
+
+export function getReadingByOrderId(
+  orderId: string,
+  userId: number
+): Reading | null {
+  const db = getDatabase();
+
+  const result = db.exec(
+    'SELECT * FROM readings WHERE order_id = ? AND user_id = ?',
+    [orderId, userId]
+  );
+
+  if (result.length === 0 || result[0].values.length === 0) {
+    return null;
+  }
+
+  const row = result[0].values[0];
+  return {
+    id: row[0] as number,
+    user_id: row[1] as number,
+    cards: row[2] as string,
+    interpretation: row[3] as string,
+    user_context: row[4] as string,
+    order_id: row[5] as string | undefined,
+    created_at: row[6] as string,
   };
 }
 

@@ -32,7 +32,8 @@ export interface Spread {
 export interface ReadingInput {
   selectedCards: SelectedCard[];
   userContext: string;
-  spread?: Spread; // 添加牌阵信息
+  spread?: Spread;
+  orderId?: string;
 }
 
 export interface ReadingRecord {
@@ -43,6 +44,7 @@ export interface ReadingRecord {
   userContext: string;
   uploadedImage?: string;
   createdAt: string;
+  orderId?: string;
 }
 
 export type Phase = 'input' | 'reading';

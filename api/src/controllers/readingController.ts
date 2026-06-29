@@ -4,6 +4,7 @@ import {
   createReading,
   getReadingsByUserId,
   getReadingById,
+  getReadingByOrderId,
   deleteReading,
 } from '../services/readingService';
 import { AuthRequest } from '../middleware/auth';
@@ -14,6 +15,10 @@ export const createReadingValidation = [
   body('interpretation')
     .notEmpty()
     .withMessage('解读内容不能为空'),
+  body('order_id')
+    .optional()
+    .isString()
+    .withMessage('订单号必须为字符串'),
 ];
 
 export const getReadingsValidation = [
@@ -25,6 +30,12 @@ export const getReadingsValidation = [
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('每页数量必须在1-100之间'),
+];
+
+export const searchReadingValidation = [
+  query('order_id')
+    .notEmpty()
+    .withMessage('订单号不能为空'),
 ];
 
 export const getReadingByIdValidation = [
@@ -45,12 +56,13 @@ export async function create(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    const { cards, interpretation, user_context } = req.body;
+    const { cards, interpretation, user_context, order_id } = req.body;
     const reading = createReading(
       req.user.userId,
       cards as SelectedCard[],
       interpretation,
-      user_context || ''
+      user_context || '',
+      order_id
     );
 
     res.status(201).json({
@@ -192,6 +204,48 @@ export async function remove(
     res.status(500).json({
       success: false,
       error: '删除解读失败',
+    });
+  }
+}
+
+export async function search(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: '未授权',
+      });
+      return;
+    }
+
+    const orderId = req.query.order_id as string;
+
+    if (!orderId) {
+      res.status(400).json({
+        success: false,
+        error: '订单号不能为空',
+      });
+      return;
+    }
+
+    const reading = getReadingByOrderId(orderId, req.user.userId);
+
+    if (!reading) {
+      res.status(404).json({
+        success: false,
+        error: '未找到该订单号的记录',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: reading,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: '搜索解读失败',
     });
   }
 }

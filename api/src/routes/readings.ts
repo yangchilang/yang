@@ -4,10 +4,12 @@ import {
   getAll,
   getById,
   remove,
+  search,
   createReadingValidation,
   getReadingsValidation,
   getReadingByIdValidation,
   deleteReadingValidation,
+  searchReadingValidation,
 } from '../controllers/readingController';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
@@ -15,6 +17,13 @@ import { validateRequest } from '../middleware/validation';
 const router = Router();
 
 router.use(authMiddleware);
+
+router.get(
+  '/search',
+  searchReadingValidation,
+  validateRequest,
+  search
+);
 
 router.post(
   '/',

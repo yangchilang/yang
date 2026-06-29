@@ -10,6 +10,7 @@ export interface BackendReading {
   interpretation: string;
   user_context: string;
   created_at: string;
+  order_id?: string;
 }
 
 export interface PaginatedReadings {
@@ -29,6 +30,7 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     interpretation: r.interpretation,
     userContext: r.user_context || '',
     createdAt: r.created_at,
+    orderId: r.order_id,
   };
 }
 
@@ -95,7 +97,8 @@ export async function createReadingRecord(
   cards: SelectedCard[],
   interpretation: string,
   userContext: string,
-  spread?: Spread
+  spread?: Spread,
+  orderId?: string
 ): Promise<ReadingRecord | null> {
   try {
     const response = await apiRequest<BackendReading>('/api/readings', {
@@ -105,6 +108,7 @@ export async function createReadingRecord(
         interpretation,
         user_context: userContext,
         spread,
+        order_id: orderId,
       }),
     });
     if (response.success && response.data) {
@@ -126,4 +130,16 @@ export async function deleteBackendReading(id: number): Promise<boolean> {
     console.error('Failed to delete reading from backend:', error);
   }
   return false;
+}
+
+export async function searchReadingByOrderId(orderId: string): Promise<ReadingRecord | null> {
+  try {
+    const response = await apiRequest<BackendReading>(`/api/readings/search?order_id=${encodeURIComponent(orderId)}`);
+    if (response.success && response.data) {
+      return backendToRecord(response.data);
+    }
+  } catch (error) {
+    console.error('Failed to search reading by order id:', error);
+  }
+  return null;
 }
