@@ -4,8 +4,10 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+const API_BASE_URL = 'https://yang-production-c0f7.up.railway.app';
+
 export function getApiUrl(path: string): string {
-  return path;
+  return `${API_BASE_URL}${path}`;
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
