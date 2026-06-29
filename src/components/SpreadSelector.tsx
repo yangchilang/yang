@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { spreadsByCategory, spreads } from '../data/spreads';
+import { spreadsByCategory, spreads, threeCardSpreads } from '../data/spreads';
 import { Spread } from '../types';
 
 interface SpreadSelectorProps {
@@ -101,15 +101,15 @@ export function SpreadSelector({ onSelectSpread }: SpreadSelectorProps) {
         </div>
       </motion.div>
 
-    {/* 三张牌牌阵 */}
+    {/* 三张牌基础牌阵 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h2 className="text-xl font-decorative text-tarot-gray mb-4 text-center">三张牌</h2>
+        <h2 className="text-xl font-decorative text-tarot-gray mb-4 text-center">三张牌基础牌阵</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredSpreads.filter(spread => spread.category === '三张牌').map((spread) => (
+          {threeCardSpreads.map((spread) => (
             <motion.div
               key={spread.id}
               whileHover={{ scale: 1.02 }}
@@ -138,7 +138,7 @@ export function SpreadSelector({ onSelectSpread }: SpreadSelectorProps) {
 
       {/* 类别选择 */}
       <div className="mb-8">
-        <h2 className="text-xl font-decorative text-tarot-gray mb-4 text-center">选择特殊牌阵类别</h2>
+        <h2 className="text-xl font-decorative text-tarot-gray mb-4 text-center">选择牌阵类别</h2>
         <div className="flex flex-wrap justify-center gap-3">
           {categories.map((category) => (
             <motion.button

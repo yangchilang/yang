@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tarotCards } from '../data/tarotCards';
-import { TarotCard } from './TarotCard';
 import { SpreadSelector } from './SpreadSelector';
 import { SelectedCard, ReadingInput, Spread } from '../types';
 
@@ -74,6 +73,12 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
         selectedCardsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 200);
+  };
+
+  const handleUpdatePositionMeaning = (position: number, newMeaning: string) => {
+    setSelectedCards(prev => prev.map(card => 
+      card.position === position ? { ...card, positionMeaning: newMeaning } : card
+    ));
   };
 
   const handleRemoveCard = (position: number) => {
@@ -226,34 +231,61 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
               <p className="text-tarot-gray/50 font-crimson">请选择塔罗牌开始解读</p>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            <div className="space-y-3 mb-6">
               {selectedCards.map((selectedCard, index) => (
                 <motion.div
                   key={selectedCard.position}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="relative group"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="bg-tarot-lightgray/20 rounded-xl p-4 border border-tarot-gold/20 group"
                 >
-                  <TarotCard
-                    card={selectedCard.card}
-                    isReversed={selectedCard.isReversed}
-                    size="small"
-                  />
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-tarot-gold rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    {index + 1}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-tarot-gold/20 rounded-lg flex items-center justify-center">
+                        <span className="text-tarot-gold font-decorative font-bold">{index + 1}</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-decorative text-tarot-gray">
+                            {String(selectedCard.card.id + 1).padStart(2, '0')} - {selectedCard.card.nameCn}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            selectedCard.isReversed 
+                              ? 'bg-red-100 text-red-600' 
+                              : 'bg-green-100 text-green-600'
+                          }`}>
+                            {selectedCard.isReversed ? '逆位' : '正位'}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          {selectedCard.card.keywords.slice(0, 2).map((keyword, i) => (
+                            <span key={i} className="text-xs text-tarot-gray/50 bg-white/50 px-2 py-0.5 rounded">
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveCard(selectedCard.position)}
+                      className="text-tarot-gray/30 hover:text-red-500 transition-colors p-2"
+                      title="删除此牌"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleRemoveCard(selectedCard.position)}
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ×
-                  </button>
-                  {/* 显示位置含义 */}
-                  <div className="mt-2 text-center">
-                    <p className="text-tarot-gray/60 text-xs font-crimson line-clamp-2">
-                      {selectedCard.positionMeaning}
-                    </p>
+                  <div className="mt-3">
+                    <label className="block text-tarot-gray/60 text-xs font-crimson mb-1">牌位含义</label>
+                    <input
+                      type="text"
+                      value={selectedCard.positionMeaning}
+                      onChange={(e) => handleUpdatePositionMeaning(selectedCard.position, e.target.value)}
+                      className="w-full bg-white/80 border border-tarot-gold/30 rounded-lg px-3 py-2 text-sm font-crimson text-tarot-gray placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors"
+                      placeholder="输入牌位含义..."
+                    />
                   </div>
                 </motion.div>
               ))}
