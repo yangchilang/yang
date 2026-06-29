@@ -11,19 +11,84 @@ export interface Spread {
   positions: SpreadPosition[];
 }
 
-export const defaultThreeCardSpread: Spread = {
-  id: 'three-card',
-  name: '三张牌牌阵',
-  description: '经典的三张牌解读，适用于任何问题',
-  category: '默认牌阵',
-  positions: [
-    { position: 1, meaning: '过去' },
-    { position: 2, meaning: '现在' },
-    { position: 3, meaning: '未来' },
-  ]
-};
-
 export const spreads: Spread[] = [
+  {
+    id: 'three-card-reunion',
+    name: '是否能复合',
+    description: '分析与对方的复合可能性',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: '和对方还能不能复合' },
+      { position: 2, meaning: '对方想不想复合' },
+      { position: 3, meaning: '有什么阻碍' },
+    ]
+  },
+  {
+    id: 'three-card-feelings',
+    name: 'ta的想法和感觉',
+    description: '了解对方的真实想法和感受',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: 'ta的想法' },
+      { position: 2, meaning: 'ta的感觉' },
+      { position: 3, meaning: 'ta对我的想法和感觉' },
+    ]
+  },
+  {
+    id: 'three-card-soulmate',
+    name: '正缘',
+    description: '探索未来正缘的特征',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: '未来正缘的性格' },
+      { position: 2, meaning: '未来正缘的外貌和身高信息，分析时请尽量具体且友好（如肤色偏白、身高175左右、瓜子脸一类的特征）' },
+      { position: 3, meaning: '未来正缘的工作情况和职业类型' },
+    ]
+  },
+  {
+    id: 'three-card-monthly',
+    name: '月发展趋势',
+    description: '预测本月的发展走向',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: '月初状态' },
+      { position: 2, meaning: '月中发展' },
+      { position: 3, meaning: '月末结果' },
+    ]
+  },
+  {
+    id: 'three-card-fortune',
+    name: '运势近中远',
+    description: '分析近期、中期和远期运势',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: '近期运势' },
+      { position: 2, meaning: '中期运势' },
+      { position: 3, meaning: '远期运势' },
+    ]
+  },
+  {
+    id: 'three-card-wealth',
+    name: '财运改善',
+    description: '改善财务状况的建议',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: '改善财务状况需要注意的地方' },
+      { position: 2, meaning: '如何改善财务状况/提升正财或偏财' },
+      { position: 3, meaning: '未来的财务状况需要注意或如何做' },
+    ]
+  },
+  {
+    id: 'three-card-dating',
+    name: '脱单',
+    description: '分析近期脱单的可能性',
+    category: '三张牌',
+    positions: [
+      { position: 1, meaning: '最近的感情状态' },
+      { position: 2, meaning: '最近会不会出现合适的人' },
+      { position: 3, meaning: '看近期脱单结果和发展趋势' },
+    ]
+  },
   // 感情复合类
   {
     id: 'complex-cross',
