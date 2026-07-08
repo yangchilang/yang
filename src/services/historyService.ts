@@ -9,8 +9,12 @@ export interface BackendReading {
   cards: string;
   interpretation: string;
   user_context: string;
+  order_id: string;
+  customer_name?: string;
+  customer_gender?: string;
+  customer_age?: number;
+  related_order_id?: string;
   created_at: string;
-  order_id?: string;
 }
 
 export interface PaginatedReadings {
@@ -31,6 +35,10 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     userContext: r.user_context || '',
     createdAt: r.created_at,
     orderId: r.order_id,
+    customerName: r.customer_name,
+    customerGender: r.customer_gender,
+    customerAge: r.customer_age,
+    relatedOrderId: r.related_order_id,
   };
 }
 
@@ -98,7 +106,11 @@ export async function createReadingRecord(
   interpretation: string,
   userContext: string,
   spread?: Spread,
-  orderId?: string
+  orderId?: string,
+  customerName?: string,
+  customerGender?: string,
+  customerAge?: number,
+  relatedOrderId?: string
 ): Promise<ReadingRecord | null> {
   try {
     const response = await apiRequest<BackendReading>('/api/readings', {
@@ -109,6 +121,10 @@ export async function createReadingRecord(
         user_context: userContext,
         spread,
         order_id: orderId,
+        customer_name: customerName,
+        customer_gender: customerGender,
+        customer_age: customerAge,
+        related_order_id: relatedOrderId,
       }),
     });
     if (response.success && response.data) {

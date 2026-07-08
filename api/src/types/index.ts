@@ -12,7 +12,11 @@ export interface Reading {
   cards: string;
   interpretation: string;
   user_context: string;
-  order_id?: string;
+  order_id: string;
+  customer_name?: string;
+  customer_gender?: string;
+  customer_age?: number;
+  related_order_id?: string;
   created_at: string;
 }
 

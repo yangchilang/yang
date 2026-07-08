@@ -16,9 +16,24 @@ export const createReadingValidation = [
     .notEmpty()
     .withMessage('解读内容不能为空'),
   body('order_id')
+    .notEmpty()
+    .withMessage('订单号不能为空'),
+  body('customer_name')
     .optional()
     .isString()
-    .withMessage('订单号必须为字符串'),
+    .withMessage('顾客姓名必须为字符串'),
+  body('customer_gender')
+    .optional()
+    .isIn(['男', '女'])
+    .withMessage('性别只能是男或女'),
+  body('customer_age')
+    .optional()
+    .isInt({ min: 1, max: 150 })
+    .withMessage('年龄必须为1-150之间的整数'),
+  body('related_order_id')
+    .optional()
+    .isString()
+    .withMessage('关联订单号必须为字符串'),
 ];
 
 export const getReadingsValidation = [
@@ -56,13 +71,17 @@ export async function create(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    const { cards, interpretation, user_context, order_id } = req.body;
+    const { cards, interpretation, user_context, order_id, customer_name, customer_gender, customer_age, related_order_id } = req.body;
     const reading = createReading(
       req.user.userId,
       cards as SelectedCard[],
       interpretation,
       user_context || '',
-      order_id
+      order_id,
+      customer_name,
+      customer_gender,
+      customer_age,
+      related_order_id
     );
 
     res.status(201).json({

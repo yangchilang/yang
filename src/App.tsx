@@ -26,6 +26,10 @@ function App() {
   const [currentRecord, setCurrentRecord] = useState<ReadingRecord | null>(null);
   const [currentUserContext, setCurrentUserContext] = useState('');
   const [orderId, setOrderId] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerGender, setCustomerGender] = useState('');
+  const [customerAge, setCustomerAge] = useState<number | undefined>(undefined);
+  const [relatedOrderId, setRelatedOrderId] = useState('');
 
   const { checkAuth, isAuthenticated } = useAuthStore();
 
@@ -37,7 +41,11 @@ function App() {
     setSelectedCards(input.selectedCards);
     setSpread(input.spread);
     setCurrentUserContext(input.userContext);
-    setOrderId(input.orderId || '');
+    setOrderId(input.orderId);
+    setCustomerName(input.customerName || '');
+    setCustomerGender(input.customerGender || '');
+    setCustomerAge(input.customerAge);
+    setRelatedOrderId(input.relatedOrderId || '');
     setView('reading');
     setIsLoading(true);
 
@@ -62,13 +70,17 @@ function App() {
       uploadedImage,
       createdAt: new Date().toISOString(),
       orderId,
+      customerName,
+      customerGender,
+      customerAge,
+      relatedOrderId,
     };
     // Always save to localStorage as fallback
     saveReadingRecord(record);
     // If authenticated, also save to backend
     if (isAuthenticated) {
       try {
-        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId);
+        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId, customerName, customerGender, customerAge, relatedOrderId);
       } catch (error) {
         console.error('Failed to save reading to backend:', error);
       }
@@ -80,6 +92,10 @@ function App() {
     setInterpretation('');
     setCurrentUserContext('');
     setOrderId('');
+    setCustomerName('');
+    setCustomerGender('');
+    setCustomerAge(undefined);
+    setRelatedOrderId('');
     setView('home');
   };
 

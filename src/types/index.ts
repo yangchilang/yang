@@ -33,7 +33,11 @@ export interface ReadingInput {
   selectedCards: SelectedCard[];
   userContext: string;
   spread?: Spread;
-  orderId?: string;
+  orderId: string;
+  customerName?: string;
+  customerGender?: string;
+  customerAge?: number;
+  relatedOrderId?: string;
 }
 
 export interface ReadingRecord {
@@ -44,7 +48,11 @@ export interface ReadingRecord {
   userContext: string;
   uploadedImage?: string;
   createdAt: string;
-  orderId?: string;
+  orderId: string;
+  customerName?: string;
+  customerGender?: string;
+  customerAge?: number;
+  relatedOrderId?: string;
 }
 
 export type Phase = 'input' | 'reading';

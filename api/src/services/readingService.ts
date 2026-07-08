@@ -6,14 +6,18 @@ export function createReading(
   cards: SelectedCard[],
   interpretation: string,
   userContext: string,
-  orderId?: string
+  orderId: string,
+  customerName?: string,
+  customerGender?: string,
+  customerAge?: number,
+  relatedOrderId?: string
 ): Reading {
   const db = getDatabase();
   const cardsJson = JSON.stringify(cards);
 
   db.run(
-    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id) VALUES (?, ?, ?, ?, ?)',
-    [userId, cardsJson, interpretation, userContext, orderId || null]
+    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, customer_name, customer_gender, customer_age, related_order_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId, cardsJson, interpretation, userContext, orderId, customerName || null, customerGender || null, customerAge || null, relatedOrderId || null]
   );
 
   saveDatabase();
@@ -30,8 +34,12 @@ export function createReading(
     cards: readingRow[2] as string,
     interpretation: readingRow[3] as string,
     user_context: readingRow[4] as string,
-    order_id: readingRow[5] as string | undefined,
-    created_at: readingRow[6] as string,
+    order_id: readingRow[5] as string,
+    customer_name: readingRow[6] as string | undefined,
+    customer_gender: readingRow[7] as string | undefined,
+    customer_age: readingRow[8] as number | undefined,
+    related_order_id: readingRow[9] as string | undefined,
+    created_at: readingRow[10] as string,
   };
 }
 
@@ -60,8 +68,12 @@ export function getReadingsByUserId(
     cards: row[2] as string,
     interpretation: row[3] as string,
     user_context: row[4] as string,
-    order_id: row[5] as string | undefined,
-    created_at: row[6] as string,
+    order_id: row[5] as string,
+    customer_name: row[6] as string | undefined,
+    customer_gender: row[7] as string | undefined,
+    customer_age: row[8] as number | undefined,
+    related_order_id: row[9] as string | undefined,
+    created_at: row[10] as string,
   }));
 
   return { readings, total };
@@ -89,8 +101,12 @@ export function getReadingById(
     cards: row[2] as string,
     interpretation: row[3] as string,
     user_context: row[4] as string,
-    order_id: row[5] as string | undefined,
-    created_at: row[6] as string,
+    order_id: row[5] as string,
+    customer_name: row[6] as string | undefined,
+    customer_gender: row[7] as string | undefined,
+    customer_age: row[8] as number | undefined,
+    related_order_id: row[9] as string | undefined,
+    created_at: row[10] as string,
   };
 }
 
@@ -116,8 +132,12 @@ export function getReadingByOrderId(
     cards: row[2] as string,
     interpretation: row[3] as string,
     user_context: row[4] as string,
-    order_id: row[5] as string | undefined,
-    created_at: row[6] as string,
+    order_id: row[5] as string,
+    customer_name: row[6] as string | undefined,
+    customer_gender: row[7] as string | undefined,
+    customer_age: row[8] as number | undefined,
+    related_order_id: row[9] as string | undefined,
+    created_at: row[10] as string,
   };
 }
 
