@@ -90,6 +90,36 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
         db.run('CREATE INDEX IF NOT EXISTS idx_readings_related_order_id ON readings(related_order_id)');
         console.log('✅ Added related_order_id column to readings table');
       }
+      
+      if (!columnNames.includes('diviner_age')) {
+        db.run('ALTER TABLE readings ADD COLUMN diviner_age INTEGER');
+        console.log('✅ Added diviner_age column to readings table');
+      }
+      
+      if (!columnNames.includes('partner_age')) {
+        db.run('ALTER TABLE readings ADD COLUMN partner_age INTEGER');
+        console.log('✅ Added partner_age column to readings table');
+      }
+      
+      if (!columnNames.includes('relationship')) {
+        db.run('ALTER TABLE readings ADD COLUMN relationship TEXT');
+        console.log('✅ Added relationship column to readings table');
+      }
+      
+      if (!columnNames.includes('is_contacting')) {
+        db.run('ALTER TABLE readings ADD COLUMN is_contacting INTEGER DEFAULT 0');
+        console.log('✅ Added is_contacting column to readings table');
+      }
+      
+      if (!columnNames.includes('customer_statement')) {
+        db.run('ALTER TABLE readings ADD COLUMN customer_statement TEXT');
+        console.log('✅ Added customer_statement column to readings table');
+      }
+      
+      if (!columnNames.includes('customer_question')) {
+        db.run('ALTER TABLE readings ADD COLUMN customer_question TEXT');
+        console.log('✅ Added customer_question column to readings table');
+      }
     }
   } catch (e) {
     console.log('ℹ️  Column migration skipped (table may not exist yet)');

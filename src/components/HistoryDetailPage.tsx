@@ -182,6 +182,65 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-tarot-darkblue/30 rounded-lg p-6 border border-tarot-gold/15 mb-8"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-tarot-gold">🌙</span>
+              <span className="text-tarot-gold font-decorative text-lg">客户信息</span>
+            </div>
+            {record.orderId && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
+                <span className="text-tarot-gray/50">订单号：</span>{record.orderId}
+              </div>
+            )}
+            {record.customerGender && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
+                <span className="text-tarot-gray/50">性别：</span>{record.customerGender}
+              </div>
+            )}
+            {record.divinerAge && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
+                <span className="text-tarot-gray/50">占卜者年龄：</span>{record.divinerAge}
+              </div>
+            )}
+            {record.partnerAge && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
+                <span className="text-tarot-gray/50">对方年龄：</span>{record.partnerAge}
+              </div>
+            )}
+            {record.relationship && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
+                <span className="text-tarot-gray/50">关系：</span>{record.relationship}
+              </div>
+            )}
+            {record.isContacting !== undefined && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
+                <span className="text-tarot-gray/50">是否联系：</span>{record.isContacting ? '是' : '否'}
+              </div>
+            )}
+            {record.customerStatement && (
+              <div className="mt-4">
+                <div className="text-tarot-gray/50 font-crimson text-xs mb-1">客户自述</div>
+                <div className="text-tarot-gray/80 font-crimson text-sm">{record.customerStatement}</div>
+              </div>
+            )}
+            {record.customerQuestion && (
+              <div className="mt-4">
+                <div className="text-tarot-gray/50 font-crimson text-xs mb-1">客户问题</div>
+                <div className="text-tarot-gray/80 font-crimson text-sm">{record.customerQuestion}</div>
+              </div>
+            )}
+            {record.relatedOrderId && (
+              <div className="text-tarot-gray/80 font-crimson text-sm mt-4 pt-4 border-t border-tarot-gold/10">
+                <span className="text-tarot-gray/50">关联订单：</span>{record.relatedOrderId}
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="bg-tarot-gold/5 rounded-lg p-6 border border-tarot-gold/20 mb-8"
           >

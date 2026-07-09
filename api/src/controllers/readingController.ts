@@ -18,22 +18,38 @@ export const createReadingValidation = [
   body('order_id')
     .notEmpty()
     .withMessage('订单号不能为空'),
-  body('customer_name')
-    .optional()
-    .isString()
-    .withMessage('顾客姓名必须为字符串'),
   body('customer_gender')
     .optional()
     .isIn(['男', '女'])
     .withMessage('性别只能是男或女'),
-  body('customer_age')
-    .optional()
-    .isInt({ min: 1, max: 150 })
-    .withMessage('年龄必须为1-150之间的整数'),
   body('related_order_id')
     .optional()
     .isString()
     .withMessage('关联订单号必须为字符串'),
+  body('diviner_age')
+    .optional()
+    .isInt({ min: 1, max: 150 })
+    .withMessage('占卜者年龄必须为1-150之间的整数'),
+  body('partner_age')
+    .optional()
+    .isInt({ min: 1, max: 150 })
+    .withMessage('对方年龄必须为1-150之间的整数'),
+  body('relationship')
+    .optional()
+    .isIn(['单身', '暧昧', '恋爱中', '分手', '已婚', '离婚'])
+    .withMessage('关系类型不正确'),
+  body('is_contacting')
+    .optional()
+    .isBoolean()
+    .withMessage('是否联系必须为布尔值'),
+  body('customer_statement')
+    .optional()
+    .isString()
+    .withMessage('客户自述必须为字符串'),
+  body('customer_question')
+    .optional()
+    .isString()
+    .withMessage('客户问题必须为字符串'),
 ];
 
 export const getReadingsValidation = [
@@ -71,17 +87,21 @@ export async function create(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    const { cards, interpretation, user_context, order_id, customer_name, customer_gender, customer_age, related_order_id } = req.body;
+    const { cards, interpretation, user_context, order_id, customer_gender, related_order_id, diviner_age, partner_age, relationship, is_contacting, customer_statement, customer_question } = req.body;
     const reading = createReading(
       req.user.userId,
       cards as SelectedCard[],
       interpretation,
       user_context || '',
       order_id,
-      customer_name,
       customer_gender,
-      customer_age,
-      related_order_id
+      related_order_id,
+      diviner_age,
+      partner_age,
+      relationship,
+      is_contacting,
+      customer_statement,
+      customer_question
     );
 
     res.status(201).json({

@@ -34,10 +34,14 @@ export interface ReadingInput {
   userContext: string;
   spread?: Spread;
   orderId: string;
-  customerName?: string;
   customerGender?: string;
-  customerAge?: number;
   relatedOrderId?: string;
+  divinerAge?: number;
+  partnerAge?: number;
+  relationship?: string;
+  isContacting?: boolean;
+  customerStatement?: string;
+  customerQuestion?: string;
 }
 
 export interface ReadingRecord {
@@ -49,10 +53,14 @@ export interface ReadingRecord {
   uploadedImage?: string;
   createdAt: string;
   orderId: string;
-  customerName?: string;
   customerGender?: string;
-  customerAge?: number;
   relatedOrderId?: string;
+  divinerAge?: number;
+  partnerAge?: number;
+  relationship?: string;
+  isContacting?: boolean;
+  customerStatement?: string;
+  customerQuestion?: string;
 }
 
 export type Phase = 'input' | 'reading';

@@ -10,10 +10,14 @@ export interface BackendReading {
   interpretation: string;
   user_context: string;
   order_id: string;
-  customer_name?: string;
   customer_gender?: string;
-  customer_age?: number;
   related_order_id?: string;
+  diviner_age?: number;
+  partner_age?: number;
+  relationship?: string;
+  is_contacting?: number;
+  customer_statement?: string;
+  customer_question?: string;
   created_at: string;
 }
 
@@ -35,10 +39,14 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     userContext: r.user_context || '',
     createdAt: r.created_at,
     orderId: r.order_id,
-    customerName: r.customer_name,
     customerGender: r.customer_gender,
-    customerAge: r.customer_age,
     relatedOrderId: r.related_order_id,
+    divinerAge: r.diviner_age,
+    partnerAge: r.partner_age,
+    relationship: r.relationship,
+    isContacting: r.is_contacting === 1,
+    customerStatement: r.customer_statement,
+    customerQuestion: r.customer_question,
   };
 }
 
@@ -107,10 +115,14 @@ export async function createReadingRecord(
   userContext: string,
   spread?: Spread,
   orderId?: string,
-  customerName?: string,
   customerGender?: string,
-  customerAge?: number,
-  relatedOrderId?: string
+  relatedOrderId?: string,
+  divinerAge?: number,
+  partnerAge?: number,
+  relationship?: string,
+  isContacting?: boolean,
+  customerStatement?: string,
+  customerQuestion?: string
 ): Promise<ReadingRecord | null> {
   try {
     const response = await apiRequest<BackendReading>('/api/readings', {
@@ -121,10 +133,14 @@ export async function createReadingRecord(
         user_context: userContext,
         spread,
         order_id: orderId,
-        customer_name: customerName,
         customer_gender: customerGender,
-        customer_age: customerAge,
         related_order_id: relatedOrderId,
+        diviner_age: divinerAge,
+        partner_age: partnerAge,
+        relationship,
+        is_contacting: isContacting,
+        customer_statement: customerStatement,
+        customer_question: customerQuestion,
       }),
     });
     if (response.success && response.data) {

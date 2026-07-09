@@ -13,10 +13,14 @@ export interface Reading {
   interpretation: string;
   user_context: string;
   order_id: string;
-  customer_name?: string;
   customer_gender?: string;
-  customer_age?: number;
   related_order_id?: string;
+  diviner_age?: number;
+  partner_age?: number;
+  relationship?: string;
+  is_contacting?: number;
+  customer_statement?: string;
+  customer_question?: string;
   created_at: string;
 }
 
