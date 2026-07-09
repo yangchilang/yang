@@ -18,13 +18,11 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
   const [isReversed, setIsReversed] = useState(false);
   const [userContext, setUserContext] = useState('');
   
+  const [title, setTitle] = useState('');
   const [orderId, setOrderId] = useState('');
   const [customerGender, setCustomerGender] = useState('');
   const [relatedOrderId, setRelatedOrderId] = useState('');
-  const [divinerAge, setDivinerAge] = useState<number | null>(null);
-  const [partnerAge, setPartnerAge] = useState<number | null>(null);
-  const [relationship, setRelationship] = useState('');
-  const [isContacting, setIsContacting] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState('');
   const [customerStatement, setCustomerStatement] = useState('');
   const [customerQuestion, setCustomerQuestion] = useState('');
   
@@ -38,6 +36,7 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
   const handleSelectSpread = (spread: Spread) => {
     setSelectedSpread(spread);
     setSelectedCards([]);
+    setTitle(spread.name);
     setStep('info');
   };
 
@@ -58,6 +57,9 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
 
   const validateInfoForm = () => {
     const newErrors: Record<string, string> = {};
+    if (!title.trim()) {
+      newErrors.title = '标题不能为空';
+    }
     if (!orderId.trim()) {
       newErrors.orderId = '订单号不能为空';
     }
@@ -136,19 +138,6 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
           返回
         </button>
 
-        <div className="text-center mb-8">
-          <motion.h1
-            className="text-4xl md:text-5xl font-decorative text-tarot-gray mb-4"
-            animate={{ opacity: [0, 1], scale: [0.9, 1] }}
-            transition={{ duration: 0.8 }}
-          >
-            基本信息
-          </motion.h1>
-          <p className="text-tarot-gray/70 font-crimson text-lg">
-            请填写解读的基本信息
-          </p>
-        </div>
-
         <div className="space-y-6">
           <div className="bg-white rounded-xl p-6 md:p-8 border border-tarot-gold/20 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
@@ -159,6 +148,28 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
             </div>
 
             <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-tarot-gray/80 font-decorative text-sm">标题</label>
+                  <span className="text-red-500 text-xs">*</span>
+                </div>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (errors.title) setErrors(prev => ({ ...prev, title: '' }));
+                  }}
+                  placeholder="请输入标题"
+                  className={`w-full bg-tarot-lightgray/30 border-2 rounded-lg px-4 py-3 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:outline-none transition-colors ${
+                    errors.title ? 'border-red-400' : 'border-tarot-gold/40 focus:border-tarot-gold'
+                  }`}
+                />
+                {errors.title && (
+                  <p className="text-red-500 text-xs mt-1 font-crimson">{errors.title}</p>
+                )}
+              </div>
+
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <label className="block text-tarot-gray/80 font-decorative text-sm">订单号</label>
@@ -218,100 +229,14 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-tarot-darkblue/50 rounded-xl p-4 border border-tarot-gold/10">
-                <p className="text-tarot-gray/60 text-xs font-crimson mb-4">占卜主体及客户语境中的客体信息</p>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-tarot-gray/70 font-crimson text-xs mb-2">占卜者年龄</label>
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => setDivinerAge(prev => prev ? Math.max(1, prev - 1) : null)}
-                        className="w-8 h-10 bg-tarot-lightgray/30 border border-tarot-gold/30 rounded-l-lg flex items-center justify-center text-tarot-gold hover:bg-tarot-gold/10 transition-colors text-sm"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={divinerAge || ''}
-                        onChange={(e) => setDivinerAge(e.target.value ? parseInt(e.target.value) : null)}
-                        className="flex-1 h-10 bg-tarot-lightgray/20 border-y border-tarot-gold/30 px-3 text-tarot-gray font-crimson text-center text-sm focus:border-tarot-gold focus:outline-none transition-colors"
-                      />
-                      <button
-                        onClick={() => setDivinerAge(prev => prev ? Math.min(150, prev + 1) : 1)}
-                        className="w-8 h-10 bg-tarot-lightgray/30 border border-tarot-gold/30 rounded-r-lg flex items-center justify-center text-tarot-gold hover:bg-tarot-gold/10 transition-colors text-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-tarot-gray/70 font-crimson text-xs mb-2">对方年龄</label>
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => setPartnerAge(prev => prev ? Math.max(1, prev - 1) : null)}
-                        className="w-8 h-10 bg-tarot-lightgray/30 border border-tarot-gold/30 rounded-l-lg flex items-center justify-center text-tarot-gold hover:bg-tarot-gold/10 transition-colors text-sm"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={partnerAge || ''}
-                        onChange={(e) => setPartnerAge(e.target.value ? parseInt(e.target.value) : null)}
-                        className="flex-1 h-10 bg-tarot-lightgray/20 border-y border-tarot-gold/30 px-3 text-tarot-gray font-crimson text-center text-sm focus:border-tarot-gold focus:outline-none transition-colors"
-                      />
-                      <button
-                        onClick={() => setPartnerAge(prev => prev ? Math.min(150, prev + 1) : 1)}
-                        className="w-8 h-10 bg-tarot-lightgray/30 border border-tarot-gold/30 rounded-r-lg flex items-center justify-center text-tarot-gold hover:bg-tarot-gold/10 transition-colors text-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-tarot-gray/70 font-crimson text-xs mb-2">现在是什么关系</label>
-                    <select
-                      value={relationship}
-                      onChange={(e) => setRelationship(e.target.value)}
-                      className="w-full bg-tarot-lightgray/20 border border-tarot-gold/30 rounded-lg px-3 py-2.5 text-tarot-gray font-crimson text-sm focus:border-tarot-gold focus:outline-none transition-colors appearance-none cursor-pointer"
-                    >
-                      <option value="">选择关系</option>
-                      <option value="单身">单身</option>
-                      <option value="暧昧">暧昧</option>
-                      <option value="恋爱中">恋爱中</option>
-                      <option value="分手">分手</option>
-                      <option value="已婚">已婚</option>
-                      <option value="离婚">离婚</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-tarot-gray/70 font-crimson text-xs mb-2">是否在正常联系</label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setIsContacting(true)}
-                        className={`flex-1 py-2.5 rounded-lg font-crimson text-sm transition-all ${
-                          isContacting === true
-                            ? 'bg-tarot-gold/20 border-tarot-gold text-tarot-gold border'
-                            : 'bg-tarot-lightgray/20 border border-tarot-gold/30 text-tarot-gray/60'
-                        }`}
-                      >
-                        是
-                      </button>
-                      <button
-                        onClick={() => setIsContacting(false)}
-                        className={`flex-1 py-2.5 rounded-lg font-crimson text-sm transition-all ${
-                          isContacting === false
-                            ? 'bg-tarot-gold/20 border-tarot-gold text-tarot-gold border'
-                            : 'bg-tarot-lightgray/20 border border-tarot-gold/30 text-tarot-gray/60'
-                        }`}
-                      >
-                        否
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-tarot-gray/70 font-crimson text-sm mb-2">客户主体及客户语境中的客体信息</label>
+                <textarea
+                  value={customerInfo}
+                  onChange={(e) => setCustomerInfo(e.target.value)}
+                  placeholder="例如：&#10;占卜者年龄：22&#10;对方年龄：22&#10;现在是什么关系：分手&#10;是否在正常联系：否"
+                  className="w-full h-32 bg-tarot-lightgray/30 border-2 border-tarot-gold/30 rounded-lg px-4 py-3 text-tarot-gray font-crimson text-sm placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors resize-none"
+                />
               </div>
 
               <div>
@@ -567,10 +492,7 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
                   orderId,
                   customerGender,
                   relatedOrderId,
-                  divinerAge: divinerAge ?? undefined,
-                  partnerAge: partnerAge ?? undefined,
-                  relationship,
-                  isContacting,
+                  customerInfo,
                   customerStatement,
                   customerQuestion
                 });

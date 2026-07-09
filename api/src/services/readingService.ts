@@ -9,10 +9,7 @@ export function createReading(
   orderId: string,
   customerGender?: string,
   relatedOrderId?: string,
-  divinerAge?: number,
-  partnerAge?: number,
-  relationship?: string,
-  isContacting?: boolean,
+  customerInfo?: string,
   customerStatement?: string,
   customerQuestion?: string
 ): Reading {
@@ -20,8 +17,8 @@ export function createReading(
   const cardsJson = JSON.stringify(cards);
 
   db.run(
-    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, customer_gender, related_order_id, diviner_age, partner_age, relationship, is_contacting, customer_statement, customer_question) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId, cardsJson, interpretation, userContext, orderId, customerGender || null, relatedOrderId || null, divinerAge || null, partnerAge || null, relationship || null, isContacting ? 1 : 0, customerStatement || null, customerQuestion || null]
+    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, customer_gender, related_order_id, customer_info, customer_statement, customer_question) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId, cardsJson, interpretation, userContext, orderId, customerGender || null, relatedOrderId || null, customerInfo || null, customerStatement || null, customerQuestion || null]
   );
 
   saveDatabase();
@@ -41,13 +38,10 @@ export function createReading(
     order_id: readingRow[5] as string,
     customer_gender: readingRow[6] as string | undefined,
     related_order_id: readingRow[7] as string | undefined,
-    diviner_age: readingRow[8] as number | undefined,
-    partner_age: readingRow[9] as number | undefined,
-    relationship: readingRow[10] as string | undefined,
-    is_contacting: readingRow[11] as number | undefined,
-    customer_statement: readingRow[12] as string | undefined,
-    customer_question: readingRow[13] as string | undefined,
-    created_at: readingRow[14] as string,
+    customer_info: readingRow[8] as string | undefined,
+    customer_statement: readingRow[9] as string | undefined,
+    customer_question: readingRow[10] as string | undefined,
+    created_at: readingRow[11] as string,
   };
 }
 
@@ -79,13 +73,10 @@ export function getReadingsByUserId(
     order_id: row[5] as string,
     customer_gender: row[6] as string | undefined,
     related_order_id: row[7] as string | undefined,
-    diviner_age: row[8] as number | undefined,
-    partner_age: row[9] as number | undefined,
-    relationship: row[10] as string | undefined,
-    is_contacting: row[11] as number | undefined,
-    customer_statement: row[12] as string | undefined,
-    customer_question: row[13] as string | undefined,
-    created_at: row[14] as string,
+    customer_info: row[8] as string | undefined,
+    customer_statement: row[9] as string | undefined,
+    customer_question: row[10] as string | undefined,
+    created_at: row[11] as string,
   }));
 
   return { readings, total };
@@ -116,13 +107,10 @@ export function getReadingById(
     order_id: row[5] as string,
     customer_gender: row[6] as string | undefined,
     related_order_id: row[7] as string | undefined,
-    diviner_age: row[8] as number | undefined,
-    partner_age: row[9] as number | undefined,
-    relationship: row[10] as string | undefined,
-    is_contacting: row[11] as number | undefined,
-    customer_statement: row[12] as string | undefined,
-    customer_question: row[13] as string | undefined,
-    created_at: row[14] as string,
+    customer_info: row[8] as string | undefined,
+    customer_statement: row[9] as string | undefined,
+    customer_question: row[10] as string | undefined,
+    created_at: row[11] as string,
   };
 }
 
@@ -151,13 +139,10 @@ export function getReadingByOrderId(
     order_id: row[5] as string,
     customer_gender: row[6] as string | undefined,
     related_order_id: row[7] as string | undefined,
-    diviner_age: row[8] as number | undefined,
-    partner_age: row[9] as number | undefined,
-    relationship: row[10] as string | undefined,
-    is_contacting: row[11] as number | undefined,
-    customer_statement: row[12] as string | undefined,
-    customer_question: row[13] as string | undefined,
-    created_at: row[14] as string,
+    customer_info: row[8] as string | undefined,
+    customer_statement: row[9] as string | undefined,
+    customer_question: row[10] as string | undefined,
+    created_at: row[11] as string,
   };
 }
 

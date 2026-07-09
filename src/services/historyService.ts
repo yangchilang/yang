@@ -12,10 +12,7 @@ export interface BackendReading {
   order_id: string;
   customer_gender?: string;
   related_order_id?: string;
-  diviner_age?: number;
-  partner_age?: number;
-  relationship?: string;
-  is_contacting?: number;
+  customer_info?: string;
   customer_statement?: string;
   customer_question?: string;
   created_at: string;
@@ -41,10 +38,7 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     orderId: r.order_id,
     customerGender: r.customer_gender,
     relatedOrderId: r.related_order_id,
-    divinerAge: r.diviner_age,
-    partnerAge: r.partner_age,
-    relationship: r.relationship,
-    isContacting: r.is_contacting === 1,
+    customerInfo: r.customer_info,
     customerStatement: r.customer_statement,
     customerQuestion: r.customer_question,
   };
@@ -117,10 +111,7 @@ export async function createReadingRecord(
   orderId?: string,
   customerGender?: string,
   relatedOrderId?: string,
-  divinerAge?: number,
-  partnerAge?: number,
-  relationship?: string,
-  isContacting?: boolean,
+  customerInfo?: string,
   customerStatement?: string,
   customerQuestion?: string
 ): Promise<ReadingRecord | null> {
@@ -135,10 +126,7 @@ export async function createReadingRecord(
         order_id: orderId,
         customer_gender: customerGender,
         related_order_id: relatedOrderId,
-        diviner_age: divinerAge,
-        partner_age: partnerAge,
-        relationship,
-        is_contacting: isContacting,
+        customer_info: customerInfo,
         customer_statement: customerStatement,
         customer_question: customerQuestion,
       }),

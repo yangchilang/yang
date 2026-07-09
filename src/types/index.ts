@@ -36,10 +36,7 @@ export interface ReadingInput {
   orderId: string;
   customerGender?: string;
   relatedOrderId?: string;
-  divinerAge?: number;
-  partnerAge?: number;
-  relationship?: string;
-  isContacting?: boolean;
+  customerInfo?: string;
   customerStatement?: string;
   customerQuestion?: string;
 }
@@ -55,10 +52,7 @@ export interface ReadingRecord {
   orderId: string;
   customerGender?: string;
   relatedOrderId?: string;
-  divinerAge?: number;
-  partnerAge?: number;
-  relationship?: string;
-  isContacting?: boolean;
+  customerInfo?: string;
   customerStatement?: string;
   customerQuestion?: string;
 }

@@ -120,6 +120,11 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
         db.run('ALTER TABLE readings ADD COLUMN customer_question TEXT');
         console.log('✅ Added customer_question column to readings table');
       }
+      
+      if (!columnNames.includes('customer_info')) {
+        db.run('ALTER TABLE readings ADD COLUMN customer_info TEXT');
+        console.log('✅ Added customer_info column to readings table');
+      }
     }
   } catch (e) {
     console.log('ℹ️  Column migration skipped (table may not exist yet)');

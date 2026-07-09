@@ -199,24 +199,12 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
                 <span className="text-tarot-gray/50">性别：</span>{record.customerGender}
               </div>
             )}
-            {record.divinerAge && (
-              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
-                <span className="text-tarot-gray/50">占卜者年龄：</span>{record.divinerAge}
-              </div>
-            )}
-            {record.partnerAge && (
-              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
-                <span className="text-tarot-gray/50">对方年龄：</span>{record.partnerAge}
-              </div>
-            )}
-            {record.relationship && (
-              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
-                <span className="text-tarot-gray/50">关系：</span>{record.relationship}
-              </div>
-            )}
-            {record.isContacting !== undefined && (
-              <div className="text-tarot-gray/80 font-crimson text-sm mb-2">
-                <span className="text-tarot-gray/50">是否联系：</span>{record.isContacting ? '是' : '否'}
+            {record.customerInfo && (
+              <div className="mt-4">
+                <div className="text-tarot-gray/50 font-crimson text-xs mb-1">客户主体及客体信息</div>
+                <div className="text-tarot-gray/80 font-crimson text-sm whitespace-pre-line bg-tarot-lightgray/30 rounded-lg p-3">
+                  {record.customerInfo}
+                </div>
               </div>
             )}
             {record.customerStatement && (

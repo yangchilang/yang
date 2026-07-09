@@ -15,10 +15,7 @@ export interface Reading {
   order_id: string;
   customer_gender?: string;
   related_order_id?: string;
-  diviner_age?: number;
-  partner_age?: number;
-  relationship?: string;
-  is_contacting?: number;
+  customer_info?: string;
   customer_statement?: string;
   customer_question?: string;
   created_at: string;

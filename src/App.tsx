@@ -28,10 +28,7 @@ function App() {
   const [orderId, setOrderId] = useState('');
   const [customerGender, setCustomerGender] = useState('');
   const [relatedOrderId, setRelatedOrderId] = useState('');
-  const [divinerAge, setDivinerAge] = useState<number | undefined>(undefined);
-  const [partnerAge, setPartnerAge] = useState<number | undefined>(undefined);
-  const [relationship, setRelationship] = useState('');
-  const [isContacting, setIsContacting] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState('');
   const [customerStatement, setCustomerStatement] = useState('');
   const [customerQuestion, setCustomerQuestion] = useState('');
 
@@ -48,10 +45,7 @@ function App() {
     setOrderId(input.orderId);
     setCustomerGender(input.customerGender || '');
     setRelatedOrderId(input.relatedOrderId || '');
-    setDivinerAge(input.divinerAge);
-    setPartnerAge(input.partnerAge);
-    setRelationship(input.relationship || '');
-    setIsContacting(input.isContacting || false);
+    setCustomerInfo(input.customerInfo || '');
     setCustomerStatement(input.customerStatement || '');
     setCustomerQuestion(input.customerQuestion || '');
     setView('reading');
@@ -80,10 +74,7 @@ function App() {
       orderId,
       customerGender,
       relatedOrderId,
-      divinerAge,
-      partnerAge,
-      relationship,
-      isContacting,
+      customerInfo,
       customerStatement,
       customerQuestion,
     };
@@ -92,7 +83,7 @@ function App() {
     // If authenticated, also save to backend
     if (isAuthenticated) {
       try {
-        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId, customerGender, relatedOrderId, divinerAge, partnerAge, relationship, isContacting, customerStatement, customerQuestion);
+        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId, customerGender, relatedOrderId, customerInfo, customerStatement, customerQuestion);
       } catch (error) {
         console.error('Failed to save reading to backend:', error);
       }
@@ -106,10 +97,7 @@ function App() {
     setOrderId('');
     setCustomerGender('');
     setRelatedOrderId('');
-    setDivinerAge(undefined);
-    setPartnerAge(undefined);
-    setRelationship('');
-    setIsContacting(false);
+    setCustomerInfo('');
     setCustomerStatement('');
     setCustomerQuestion('');
     setView('home');
