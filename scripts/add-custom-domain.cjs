@@ -7,32 +7,22 @@ const customDomain = 'tarot-yue.cn';
 const pagesSubdomain = 'ai-tarot-reading-5ed.pages.dev';
 
 function getWranglerToken() {
-  try {
-    const configPath = `${process.env.APPDATA}\\.wrangler\\config.toml`;
-    if (fs.existsSync(configPath)) {
-      const config = fs.readFileSync(configPath, 'utf8');
-      const match = config.match(/token\s*=\s*["']([^"']+)["']/);
-      if (match) return match[1];
-    }
-  } catch (e) {}
+  const paths = [
+    `${process.env.APPDATA}\\xdg.config\\.wrangler\\config\\default.toml`,
+    `${process.env.APPDATA}\\.wrangler\\config\\default.toml`,
+    `${process.env.USERPROFILE}\\.wrangler\\config\\default.toml`,
+    `${process.env.LOCALAPPDATA}\\.wrangler\\config\\default.toml`
+  ];
   
-  try {
-    const configPath = `${process.env.USERPROFILE}\\.wrangler\\config.toml`;
-    if (fs.existsSync(configPath)) {
-      const config = fs.readFileSync(configPath, 'utf8');
-      const match = config.match(/token\s*=\s*["']([^"']+)["']/);
-      if (match) return match[1];
-    }
-  } catch (e) {}
-  
-  try {
-    const configPath = `${process.env.LOCALAPPDATA}\\.wrangler\\config.toml`;
-    if (fs.existsSync(configPath)) {
-      const config = fs.readFileSync(configPath, 'utf8');
-      const match = config.match(/token\s*=\s*["']([^"']+)["']/);
-      if (match) return match[1];
-    }
-  } catch (e) {}
+  for (const configPath of paths) {
+    try {
+      if (fs.existsSync(configPath)) {
+        const config = fs.readFileSync(configPath, 'utf8');
+        const match = config.match(/oauth_token\s*=\s*["']([^"']+)["']/);
+        if (match) return match[1];
+      }
+    } catch (e) {}
+  }
   
   throw new Error('Unable to find wrangler OAuth token');
 }
