@@ -11,8 +11,7 @@ export function Login() {
   const { login, isLoading, error, clearError } = useAuthStore();
 
   useEffect(() => {
-    // 加载记住的凭据（sessionStorage，关闭网页后自动清除）
-    const savedCredentials = sessionStorage.getItem(CREDENTIALS_KEY);
+    const savedCredentials = localStorage.getItem(CREDENTIALS_KEY);
     if (savedCredentials) {
       try {
         const { username: savedUsername, password: savedPassword } = JSON.parse(savedCredentials);
@@ -32,13 +31,10 @@ export function Login() {
     clearError();
     try {
       await login(username, password);
-      // 登录成功后，authStore 的 isAuthenticated 状态会自动更新
-      // ProtectedRoute 会响应状态变化，无需刷新页面
-      // 处理记住密码（sessionStorage，关闭网页后自动清除）
       if (rememberMe) {
-        sessionStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));
+        localStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));
       } else {
-        sessionStorage.removeItem(CREDENTIALS_KEY);
+        localStorage.removeItem(CREDENTIALS_KEY);
       }
     } catch {
       // error handled by store
@@ -107,7 +103,7 @@ export function Login() {
               className="w-4 h-4 text-tarot-gold bg-white border-tarot-gold/30 rounded focus:ring-tarot-gold focus:ring-offset-0"
             />
             <label htmlFor="rememberMe" className="ml-2 text-tarot-gray/70 font-crimson text-sm cursor-pointer">
-              记住密码
+              记住用户名和密码
             </label>
           </div>
 

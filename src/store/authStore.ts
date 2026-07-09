@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { login, logout, getCurrentUser, User } from '../services/authService';
 import { getAuthToken } from '../services/api';
 
+const CREDENTIALS_KEY = 'tarot_remember_credentials';
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
@@ -39,6 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     logout();
+    localStorage.removeItem(CREDENTIALS_KEY);
     set({
       user: null,
       isAuthenticated: false,
@@ -47,7 +50,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
-    // 如果本地没有 token，直接保持未登录状态
     const token = getAuthToken();
     if (!token) {
       set({ isLoading: false, isAuthenticated: false, user: null });
@@ -63,9 +65,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     } catch (error) {
-      // 网络错误或其他错误时，如果有 token 存在，保持登录状态（乐观策略）
-      // 只有显式调用 logout 才会退出登录
-      set({ isLoading: false });
+      set({ isLoading: false, isAuthenticated: false, user: null });
+      logout();
     }
   },
 
