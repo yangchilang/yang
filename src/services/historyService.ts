@@ -10,6 +10,7 @@ export interface BackendReading {
   interpretation: string;
   user_context: string;
   order_id: string;
+  title?: string;
   customer_gender?: string;
   related_order_id?: string;
   customer_info?: string;
@@ -36,6 +37,7 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     userContext: r.user_context || '',
     createdAt: r.created_at,
     orderId: r.order_id,
+    title: r.title || '',
     customerGender: r.customer_gender,
     relatedOrderId: r.related_order_id,
     customerInfo: r.customer_info,
@@ -109,6 +111,7 @@ export async function createReadingRecord(
   userContext: string,
   spread?: Spread,
   orderId?: string,
+  title?: string,
   customerGender?: string,
   relatedOrderId?: string,
   customerInfo?: string,
@@ -124,6 +127,7 @@ export async function createReadingRecord(
         user_context: userContext,
         spread,
         order_id: orderId,
+        title,
         customer_gender: customerGender,
         related_order_id: relatedOrderId,
         customer_info: customerInfo,

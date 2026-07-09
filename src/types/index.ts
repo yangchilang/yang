@@ -34,6 +34,7 @@ export interface ReadingInput {
   userContext: string;
   spread?: Spread;
   orderId: string;
+  title: string;
   customerGender?: string;
   relatedOrderId?: string;
   customerInfo?: string;
@@ -50,6 +51,7 @@ export interface ReadingRecord {
   uploadedImage?: string;
   createdAt: string;
   orderId: string;
+  title: string;
   customerGender?: string;
   relatedOrderId?: string;
   customerInfo?: string;

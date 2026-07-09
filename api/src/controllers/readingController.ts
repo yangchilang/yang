@@ -18,6 +18,10 @@ export const createReadingValidation = [
   body('order_id')
     .notEmpty()
     .withMessage('订单号不能为空'),
+  body('title')
+    .optional()
+    .isString()
+    .withMessage('标题必须为字符串'),
   body('customer_gender')
     .optional()
     .isIn(['男', '女'])
@@ -75,13 +79,14 @@ export async function create(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    const { cards, interpretation, user_context, order_id, customer_gender, related_order_id, customer_info, customer_statement, customer_question } = req.body;
+    const { cards, interpretation, user_context, order_id, title, customer_gender, related_order_id, customer_info, customer_statement, customer_question } = req.body;
     const reading = createReading(
       req.user.userId,
       cards as SelectedCard[],
       interpretation,
       user_context || '',
       order_id,
+      title,
       customer_gender,
       related_order_id,
       customer_info,

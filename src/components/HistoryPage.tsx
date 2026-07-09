@@ -37,6 +37,7 @@ export function HistoryPage({ onViewDetail, onNewReading }: HistoryPageProps) {
           userContext: r.user_context || '',
           createdAt: r.created_at,
           orderId: r.order_id,
+          title: r.title || '',
         }));
         setRecords(mapped);
       } else {

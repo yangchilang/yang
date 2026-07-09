@@ -8,6 +8,7 @@ export interface Reading {
   interpretation: string;
   user_context: string;
   order_id: string;
+  title?: string;
   customer_gender?: string;
   related_order_id?: string;
   customer_info?: string;
@@ -21,6 +22,7 @@ export interface CreateReadingRequest {
   interpretation: string;
   user_context?: string;
   order_id: string;
+  title?: string;
   customer_gender?: string;
   related_order_id?: string;
   customer_info?: string;

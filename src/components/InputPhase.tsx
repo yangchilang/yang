@@ -490,6 +490,7 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
                   userContext, 
                   spread: selectedSpread!, 
                   orderId,
+                  title,
                   customerGender,
                   relatedOrderId,
                   customerInfo,
