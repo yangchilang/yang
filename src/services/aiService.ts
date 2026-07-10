@@ -4,7 +4,7 @@ const API_KEY = import.meta.env.VITE_AI_API_KEY || 'sk-bc0642954c244f0996f2c2e71
 const API_URL = import.meta.env.VITE_AI_API_URL || 'https://api.deepseek.com/v1/chat/completions';
 
 function buildPrompt(input: ReadingInput): string {
-  const { selectedCards, userContext, spread } = input;
+  const { selectedCards, userContext, spread, customerGender, customerInfo, customerStatement, customerQuestion } = input;
   
   const cardsInfo = selectedCards.map((sc, index) => {
     const orientation = sc.isReversed ? '逆位' : '正位';
@@ -14,8 +14,6 @@ function buildPrompt(input: ReadingInput): string {
 牌名：${sc.card.nameCn} (${sc.card.name})
 状态：${orientation}
 牌义：${sc.isReversed ? sc.card.reversedMeaning : sc.card.meaning}
-元素：${sc.card.element}
-守护星：${sc.card.zodiac}
     `;
   }).join('\n');
 
@@ -23,9 +21,27 @@ function buildPrompt(input: ReadingInput): string {
     ? `\n【牌阵名称】${spread.name}\n【牌阵说明】${spread.description}\n`
     : '';
 
+  const genderInfo = customerGender 
+    ? `性别：${customerGender}\n` 
+    : '';
+
+  const customerInfoSection = customerInfo 
+    ? `【客户主体及语境信息】\n${customerInfo}\n` 
+    : '';
+
+  const statementInfo = customerStatement 
+    ? `【客户自述】\n${customerStatement}\n` 
+    : '';
+
+  const questionInfo = customerQuestion 
+    ? `【客户想问的问题】\n${customerQuestion}\n` 
+    : '';
+
   const contextInfo = userContext.trim() 
-    ? `\n\n用户的困惑与背景：\n"${userContext}"\n\n` 
-    : '\n\n（用户没有提供具体背景，请从普遍的人生主题角度进行解读）\n\n';
+    ? `【占卜背景】\n${userContext}\n` 
+    : '';
+
+  const allContext = [genderInfo, customerInfoSection, statementInfo, questionInfo, contextInfo].filter(Boolean).join('\n');
 
   return `你是一位有着二十年经验的资深塔罗占卜师，名叫明月。你说话温暖、亲切，就像和朋友聊天一样自然。
 
@@ -44,13 +60,15 @@ ${spreadInfo}
 
 【牌阵布局】
 ${cardsInfo}
-${contextInfo}
+
+【客户信息】
+${allContext}
 
 请生成一段详细的解读，要求：
 1. 开场要亲切自然，像"朋友，让我看看你的牌..."
 2. 根据牌阵的每个位置含义，对每张牌进行针对性的解读
 3. 探讨牌面之间的联系和互动，形成完整的叙事
-4. 结合用户背景给出具体、有针对性的建议
+4. **必须结合客户的性别、客户信息、自述和问题进行深度解读**
 5. 结尾要给予希望和力量，像朋友的支持
 6. 全程保持温暖、真诚、口语化的语气
 7. 可以适当用感叹号表达情感，但要自然

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import { TarotCard } from './TarotCard';
 import { SelectedCard, Spread } from '../types';
 
 interface ReadingPhaseProps {
@@ -235,33 +234,32 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
                   transition={{ delay: 0.4 + index * 0.1 }}
                   className="bg-tarot-lightgray/20 rounded-lg p-4 border border-tarot-gold/15"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <TarotCard
-                        card={selectedCard.card}
-                        isReversed={selectedCard.isReversed}
-                        size="small"
-                      />
-                    </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="w-10 h-10 bg-tarot-gold/20 rounded-lg flex items-center justify-center">
+                      <span className="text-tarot-gold font-decorative font-bold">
+                        {index + 1}
+                      </span>
+                    </span>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3">
                         <span className="text-tarot-gold font-decorative text-lg">
-                          第 {selectedCard.position} 张
-                        </span>
-                        <span className="text-tarot-gray font-decorative">
                           {selectedCard.card.nameCn}
                         </span>
-                        <span className={`text-sm ${selectedCard.isReversed ? 'text-red-500' : 'text-tarot-gray/60'}`}>
+                        <span className={`text-sm px-2 py-0.5 rounded-full ${
+                          selectedCard.isReversed 
+                            ? 'bg-red-100 text-red-600' 
+                            : 'bg-green-100 text-green-600'
+                        }`}>
                           {selectedCard.isReversed ? '逆位' : '正位'}
                         </span>
                       </div>
-                      <div className="text-tarot-gray/70 font-crimson text-sm mb-2">
-                        位置含义：{selectedCard.positionMeaning}
-                      </div>
-                      <div className="text-tarot-gray/60 text-xs font-crimson">
-                        元素：{selectedCard.card.element} · {selectedCard.card.zodiac}
+                      <div className="text-tarot-gray/70 font-crimson text-sm mt-1">
+                        {selectedCard.positionMeaning}
                       </div>
                     </div>
+                  </div>
+                  <div className="text-tarot-gray/60 font-crimson text-sm pl-14">
+                    {selectedCard.isReversed ? selectedCard.card.reversedMeaning : selectedCard.card.meaning}
                   </div>
                 </motion.div>
               ))}

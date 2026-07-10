@@ -56,6 +56,7 @@ function App() {
     try {
       const reading = await getAIInterpretation(input);
       setInterpretation(reading);
+      await handleSaveReading();
     } catch (error) {
       console.error('Failed to get AI interpretation:', error);
       setInterpretation('抱歉，AI解读暂时无法获取，请稍后再试。');
