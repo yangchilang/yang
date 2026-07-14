@@ -32,6 +32,7 @@ function App() {
   const [customerInfo, setCustomerInfo] = useState('');
   const [customerStatement, setCustomerStatement] = useState('');
   const [customerQuestion, setCustomerQuestion] = useState('');
+  const [refreshHistory, setRefreshHistory] = useState(false);
 
   const { checkAuth, isAuthenticated } = useAuthStore();
 
@@ -82,15 +83,26 @@ function App() {
       customerStatement,
       customerQuestion,
     };
-    // Always save to localStorage as fallback
+    console.log('Saving reading record:', {
+      hasCards: selectedCards.length > 0,
+      hasInterpretation: interpretation.length > 0,
+      hasOrderId: orderId.length > 0,
+      isAuthenticated,
+      recordLength: JSON.stringify(record).length,
+    });
+
     saveReadingRecord(record);
-    // If authenticated, also save to backend
+    console.log('Reading record saved to localStorage');
+
     if (isAuthenticated) {
       try {
-        await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId, title, customerGender, relatedOrderId, customerInfo, customerStatement, customerQuestion);
+        const result = await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId, title, customerGender, relatedOrderId, customerInfo, customerStatement, customerQuestion);
+        console.log('Reading record saved to backend:', result);
       } catch (error) {
         console.error('Failed to save reading to backend:', error);
       }
+    } else {
+      console.log('Not authenticated, skipping backend save');
     }
   };
 
@@ -105,6 +117,7 @@ function App() {
     setCustomerInfo('');
     setCustomerStatement('');
     setCustomerQuestion('');
+    setRefreshHistory(prev => !prev);
     setView('home');
   };
 
@@ -136,6 +149,7 @@ function App() {
             <HistoryPage
               onViewDetail={handleViewHistoryDetail}
               onNewReading={() => setView('new-reading')}
+              refreshTrigger={refreshHistory}
             />
           </Suspense>
         );

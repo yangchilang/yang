@@ -14,9 +14,10 @@ import { useAuthStore } from '../store/authStore';
 interface HistoryPageProps {
   onViewDetail: (record: ReadingRecord) => void;
   onNewReading: () => void;
+  refreshTrigger?: boolean;
 }
 
-export function HistoryPage({ onViewDetail, onNewReading }: HistoryPageProps) {
+export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: HistoryPageProps) {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +68,7 @@ export function HistoryPage({ onViewDetail, onNewReading }: HistoryPageProps) {
 
   useEffect(() => {
     loadRecords();
-  }, [isAuthenticated]);
+  }, [refreshTrigger]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
