@@ -7,7 +7,7 @@ import {
   clearReadingHistory,
   fetchReadingHistory,
   deleteBackendReading,
-  searchReadingByOrderId,
+  searchReadings,
 } from '../services/historyService';
 import { useAuthStore } from '../store/authStore';
 
@@ -21,8 +21,8 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchOrderId, setSearchOrderId] = useState('');
-  const [searchResult, setSearchResult] = useState<ReadingRecord | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState<ReadingRecord[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
@@ -50,20 +50,20 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
     setIsLoading(false);
   };
 
-  const handleSearchByOrderId = async () => {
-    if (!searchOrderId.trim()) {
-      setSearchResult(null);
+  const handleSearch = async () => {
+    if (!searchKeyword.trim()) {
+      setSearchResults([]);
       return;
     }
     setIsSearching(true);
-    const result = await searchReadingByOrderId(searchOrderId.trim());
-    setSearchResult(result);
+    const results = await searchReadings(searchKeyword.trim());
+    setSearchResults(results);
     setIsSearching(false);
   };
 
   const handleClearSearch = () => {
-    setSearchOrderId('');
-    setSearchResult(null);
+    setSearchKeyword('');
+    setSearchResults([]);
   };
 
   useEffect(() => {
@@ -130,26 +130,26 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
         </p>
       </div>
 
-      {/* 订单号搜索 */}
+      {/* 搜索 */}
       <div className="bg-white rounded-xl p-4 mb-6 border border-tarot-gold/20 shadow-sm">
         <div className="flex gap-3">
           <input
             type="text"
-            value={searchOrderId}
-            onChange={(e) => setSearchOrderId(e.target.value)}
-            placeholder="输入订单号搜索..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            placeholder="输入订单号或标题搜索..."
             className="flex-1 bg-tarot-lightgray/30 border-2 border-tarot-gold/30 rounded-lg px-4 py-2 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors"
           />
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleSearchByOrderId}
+            onClick={handleSearch}
             disabled={isSearching}
             className="px-6 py-2 rounded-lg font-crimson bg-tarot-gold text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all disabled:opacity-50"
           >
             {isSearching ? '搜索中...' : '搜索'}
           </motion.button>
-          {searchOrderId && (
+          {searchKeyword && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -164,45 +164,74 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
 
       {/* 搜索结果 */}
       <AnimatePresence>
-        {searchResult && (
+        {searchResults.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="bg-tarot-gold/10 rounded-xl p-6 mb-6 border-2 border-tarot-gold"
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-decorative text-tarot-gold">搜索结果</h3>
               <span className="text-tarot-gold/60 font-crimson text-sm">
-                订单号: {searchResult.orderId}
+                共 {searchResults.length} 条记录
               </span>
             </div>
-            <div
-              onClick={() => onViewDetail(searchResult)}
-              className="cursor-pointer"
-            >
-              <p className="text-tarot-gray/70 font-crimson text-sm mb-2">
-                {formatDate(searchResult.createdAt)}
-              </p>
-              <p className="text-tarot-gray/60 font-crimson line-clamp-2">
-                {searchResult.interpretation.substring(0, 100)}...
-              </p>
-              <div className="mt-3 text-tarot-gold font-crimson text-sm flex items-center gap-1">
-                查看详情
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+            <div className="space-y-4">
+              {searchResults.map((result) => (
+                <motion.div
+                  key={result.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-white/50 rounded-lg p-4"
+                >
+                  <div
+                    onClick={() => onViewDetail(result)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-decorative text-tarot-gray">{result.title || '塔罗解读'}</h4>
+                      {result.relatedOrderId && (
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
+                          关联记录
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-tarot-gold/60 font-crimson">
+                        订单号: {result.orderId}
+                      </span>
+                      {result.relatedOrderId && (
+                        <span className="text-tarot-gray/50 font-crimson">
+                          关联订单: {result.relatedOrderId}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-tarot-gray/70 font-crimson text-sm mt-2">
+                      {formatDate(result.createdAt)}
+                    </p>
+                    <p className="text-tarot-gray/60 font-crimson text-sm line-clamp-2 mt-1">
+                      {result.interpretation.substring(0, 100)}...
+                    </p>
+                    <div className="mt-3 text-tarot-gold font-crimson text-sm flex items-center gap-1">
+                      查看详情
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
-        {searchOrderId && !searchResult && !isSearching && (
+        {searchKeyword && searchResults.length === 0 && !isSearching && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-4 mb-6 text-tarot-gray/50 font-crimson"
           >
-            未找到订单号为 "{searchOrderId}" 的记录
+            未找到包含 "{searchKeyword}" 的记录
           </motion.div>
         )}
       </AnimatePresence>

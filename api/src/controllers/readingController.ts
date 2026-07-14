@@ -6,9 +6,11 @@ import {
   getReadingById,
   getReadingByOrderId,
   deleteReading,
+  searchReadings,
+  getRelatedReadings,
 } from '../services/readingService';
 import { AuthRequest } from '../middleware/auth';
-import { SelectedCard } from '../types';
+import { SelectedCard, Reading } from '../types';
 
 export const createReadingValidation = [
   body('cards').isArray({ min: 1 }).withMessage('至少需要选择一张塔罗牌'),
@@ -56,9 +58,9 @@ export const getReadingsValidation = [
 ];
 
 export const searchReadingValidation = [
-  query('order_id')
+  query('keyword')
     .notEmpty()
-    .withMessage('订单号不能为空'),
+    .withMessage('搜索关键词不能为空'),
 ];
 
 export const getReadingByIdValidation = [
@@ -247,29 +249,51 @@ export async function search(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    const orderId = req.query.order_id as string;
+    const keyword = req.query.keyword as string;
 
-    if (!orderId) {
+    if (!keyword) {
       res.status(400).json({
         success: false,
-        error: '订单号不能为空',
+        error: '搜索关键词不能为空',
       });
       return;
     }
 
-    const reading = getReadingByOrderId(orderId, req.user.userId);
+    const readings = searchReadings(keyword, req.user.userId);
 
-    if (!reading) {
-      res.status(404).json({
-        success: false,
-        error: '未找到该订单号的记录',
+    if (readings.length === 0) {
+      res.status(200).json({
+        success: true,
+        data: { readings: [] },
       });
       return;
     }
+
+    const relatedOrderIds = new Set<string>();
+    readings.forEach(r => {
+      if (r.order_id) relatedOrderIds.add(r.order_id);
+      if (r.related_order_id) relatedOrderIds.add(r.related_order_id);
+    });
+
+    const allRelatedReadings = new Map<number, Reading>();
+    readings.forEach(r => {
+      allRelatedReadings.set(r.id, r);
+    });
+
+    for (const orderId of relatedOrderIds) {
+      const related = getRelatedReadings(orderId, undefined, req.user.userId);
+      related.forEach(r => {
+        allRelatedReadings.set(r.id, r);
+      });
+    }
+
+    const result = Array.from(allRelatedReadings.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
     res.status(200).json({
       success: true,
-      data: reading,
+      data: { readings: result },
     });
   } catch (error) {
     res.status(500).json({

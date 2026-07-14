@@ -151,6 +151,82 @@ export function getReadingByOrderId(
   };
 }
 
+export function searchReadings(
+  keyword: string,
+  userId: number
+): Reading[] {
+  const db = getDatabase();
+  const pattern = `%${keyword}%`;
+
+  const result = db.exec(
+    'SELECT * FROM readings WHERE user_id = ? AND (order_id LIKE ? OR related_order_id LIKE ? OR title LIKE ?) ORDER BY created_at DESC',
+    [userId, pattern, pattern, pattern]
+  );
+
+  if (result.length === 0 || result[0].values.length === 0) {
+    return [];
+  }
+
+  return result[0].values.map((row) => ({
+    id: row[0] as number,
+    user_id: row[1] as number,
+    cards: row[2] as string,
+    interpretation: row[3] as string,
+    user_context: row[4] as string,
+    order_id: row[5] as string,
+    title: row[6] as string | undefined,
+    customer_gender: row[7] as string | undefined,
+    related_order_id: row[8] as string | undefined,
+    customer_info: row[9] as string | undefined,
+    customer_statement: row[10] as string | undefined,
+    customer_question: row[11] as string | undefined,
+    created_at: row[12] as string,
+  }));
+}
+
+export function getRelatedReadings(
+  orderId: string,
+  relatedOrderId: string | undefined,
+  userId: number
+): Reading[] {
+  const db = getDatabase();
+  const conditions: string[] = ['user_id = ?'];
+  const params: any[] = [userId];
+
+  conditions.push('order_id = ?');
+  params.push(orderId);
+
+  if (relatedOrderId) {
+    conditions.push('related_order_id = ?');
+    params.push(relatedOrderId);
+  }
+
+  const result = db.exec(
+    `SELECT * FROM readings WHERE (${conditions.join(' OR ')}) ORDER BY created_at DESC`,
+    params
+  );
+
+  if (result.length === 0 || result[0].values.length === 0) {
+    return [];
+  }
+
+  return result[0].values.map((row) => ({
+    id: row[0] as number,
+    user_id: row[1] as number,
+    cards: row[2] as string,
+    interpretation: row[3] as string,
+    user_context: row[4] as string,
+    order_id: row[5] as string,
+    title: row[6] as string | undefined,
+    customer_gender: row[7] as string | undefined,
+    related_order_id: row[8] as string | undefined,
+    customer_info: row[9] as string | undefined,
+    customer_statement: row[10] as string | undefined,
+    customer_question: row[11] as string | undefined,
+    created_at: row[12] as string,
+  }));
+}
+
 export function deleteReading(readingId: number, userId: number): boolean {
   const db = getDatabase();
 

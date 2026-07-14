@@ -156,14 +156,14 @@ export async function deleteBackendReading(id: number): Promise<boolean> {
   return false;
 }
 
-export async function searchReadingByOrderId(orderId: string): Promise<ReadingRecord | null> {
+export async function searchReadings(keyword: string): Promise<ReadingRecord[]> {
   try {
-    const response = await apiRequest<BackendReading>(`/api/readings/search?order_id=${encodeURIComponent(orderId)}`);
-    if (response.success && response.data) {
-      return backendToRecord(response.data);
+    const response = await apiRequest<{ readings: BackendReading[] }>(`/api/readings/search?keyword=${encodeURIComponent(keyword)}`);
+    if (response.success && response.data?.readings) {
+      return response.data.readings.map(r => backendToRecord(r));
     }
   } catch (error) {
-    console.error('Failed to search reading by order id:', error);
+    console.error('Failed to search readings:', error);
   }
-  return null;
+  return [];
 }
