@@ -4,7 +4,7 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-const API_BASE_URL = 'https://yang-production-c0f7.up.railway.app';
+const API_BASE_URL = '/api';
 
 export function getApiUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
