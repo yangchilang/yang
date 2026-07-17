@@ -32,7 +32,13 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
 
   const handleSelectSpread = (spread: Spread) => {
     setSelectedSpread(spread);
-    setSelectedCards([]);
+    const initialCards: SelectedCard[] = spread.positions.map((pos) => ({
+      card: tarotCards[0],
+      isReversed: false,
+      position: pos.position,
+      positionMeaning: pos.meaning
+    }));
+    setSelectedCards(initialCards);
     setTitle(spread.name);
     setStep('combined');
   };
@@ -70,29 +76,15 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
     ));
   };
 
-  const handleAddCard = () => {
+  const handleClearAll = () => {
     if (!selectedSpread) return;
-    const newPosition = selectedCards.length + 1;
-    if (newPosition > selectedSpread.positions.length) return;
-    
-    const positionMeaning = selectedSpread.positions[newPosition - 1]?.meaning || '';
-    
-    const newCard: SelectedCard = {
+    const initialCards: SelectedCard[] = selectedSpread.positions.map((pos) => ({
       card: tarotCards[0],
       isReversed: false,
-      position: newPosition,
-      positionMeaning
-    };
-    
-    setSelectedCards(prev => [...prev, newCard]);
-  };
-
-  const handleRemoveCard = (position: number) => {
-    setSelectedCards(prev => prev.filter(c => c.position !== position));
-  };
-
-  const handleClearAll = () => {
-    setSelectedCards([]);
+      position: pos.position,
+      positionMeaning: pos.meaning
+    }));
+    setSelectedCards(initialCards);
   };
 
   const handleCardInputChange = (position: number, value: string) => {
@@ -109,9 +101,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   }
 
   const requiredCards = selectedSpread?.positions.length || 0;
-  const isComplete = selectedSpread?.positions.every((_, index) => 
-    selectedCards.some(c => c.position === index + 1 && c.card.nameCn)
-  ) || false;
+  const isComplete = selectedCards.length === requiredCards;
 
   return (
     <motion.div
@@ -138,7 +128,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
           {selectedSpread?.name}
         </motion.h1>
         <p className="text-tarot-gray/70 font-crimson">
-          需要 {requiredCards} 张牌 · 已填写 {selectedCards.length} 张
+          共 {requiredCards} 张牌，请编辑每张牌的内容
         </p>
       </div>
 
@@ -304,17 +294,6 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
                       <span className="text-tarot-gold font-decorative font-bold text-sm">{pos.position}</span>
                     </div>
                     <span className="font-decorative text-tarot-gray text-sm">第 {pos.position} 张牌</span>
-                    {selectedCard && (
-                      <button
-                        onClick={() => handleRemoveCard(pos.position)}
-                        className="ml-auto text-tarot-gray/30 hover:text-red-500 transition-colors"
-                        title="删除此牌"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -366,27 +345,6 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
               );
             })}
           </div>
-
-          {selectedCards.length < requiredCards && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-tarot-gold/10 rounded-xl p-4 border border-tarot-gold/30 text-center"
-            >
-              <button
-                onClick={handleAddCard}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                添加卡牌
-              </button>
-              <p className="text-tarot-gray/50 font-crimson text-sm mt-2">
-                还需添加 {requiredCards - selectedCards.length} 张牌
-              </p>
-            </motion.div>
-          )}
 
           {selectedCards.length > 0 && (
             <div className="flex justify-end mt-4">
