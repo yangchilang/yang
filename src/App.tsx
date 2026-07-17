@@ -106,6 +106,45 @@ function App() {
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!orderId.trim() || !title.trim()) {
+      alert('请至少填写标题和订单号');
+      return;
+    }
+    
+    const record: ReadingRecord = {
+      id: Date.now().toString(),
+      spread: spread || undefined,
+      selectedCards: selectedCards || [],
+      interpretation: '',
+      userContext: '',
+      createdAt: new Date().toISOString(),
+      orderId,
+      title,
+      customerGender,
+      relatedOrderId,
+      customerInfo,
+      customerStatement,
+      customerQuestion,
+    };
+
+    saveReadingRecord(record);
+    console.log('Draft saved to localStorage');
+
+    if (isAuthenticated) {
+      try {
+        const result = await createReadingRecord(selectedCards || [], '', '', spread, orderId, title, customerGender, relatedOrderId, customerInfo, customerStatement, customerQuestion);
+        console.log('Draft saved to backend:', result);
+      } catch (error) {
+        console.error('Failed to save draft to backend:', error);
+      }
+    }
+
+    alert('草稿已保存！您可以在历史记录中找到它');
+    setRefreshHistory(prev => !prev);
+    setView('home');
+  };
+
   const handleContinueReading = () => {
     setSelectedCards([]);
     setInterpretation('');
@@ -182,7 +221,7 @@ function App() {
                 key="input"
                 className="animate-fade-in-left"
               >
-                <InputPhase onSubmit={handleSubmit} />
+                <InputPhase onSubmit={handleSubmit} onSave={handleSaveDraft} />
               </div>
             </AnimatePresence>
           </ProtectedRoute>

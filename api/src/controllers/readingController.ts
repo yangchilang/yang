@@ -13,10 +13,11 @@ import { AuthRequest } from '../middleware/auth';
 import { SelectedCard, Reading } from '../types';
 
 export const createReadingValidation = [
-  body('cards').isArray({ min: 1 }).withMessage('至少需要选择一张塔罗牌'),
+  body('cards').isArray().withMessage('卡牌必须为数组'),
   body('interpretation')
-    .notEmpty()
-    .withMessage('解读内容不能为空'),
+    .optional()
+    .isString()
+    .withMessage('解读内容必须为字符串'),
   body('order_id')
     .notEmpty()
     .withMessage('订单号不能为空'),

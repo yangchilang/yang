@@ -6,15 +6,15 @@ import { SelectedCard, ReadingInput, Spread } from '../types';
 
 interface InputPhaseProps {
   onSubmit: (input: ReadingInput) => void;
+  onSave?: () => void;
 }
 
 type Step = 'spread' | 'combined';
 
-export function InputPhase({ onSubmit }: InputPhaseProps) {
+export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   const [step, setStep] = useState<Step>('spread');
   const [selectedSpread, setSelectedSpread] = useState<Spread | null>(null);
   const [selectedCards, setSelectedCards] = useState<SelectedCard[]>([]);
-  const [userContext, setUserContext] = useState('');
   
   const [title, setTitle] = useState('');
   const [orderId, setOrderId] = useState('');
@@ -400,49 +400,43 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
           )}
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-tarot-gold/20 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-decorative text-tarot-gray">占卜背景（选填）</h2>
-            <span className="text-tarot-gray/50 text-sm font-crimson">帮助更精准地解读</span>
-          </div>
-          <textarea
-            value={userContext}
-            onChange={(e) => setUserContext(e.target.value)}
-            placeholder="请描述您想要占卜的问题、领域或困惑，以及当前的个人情况、心境或处境..."
-            className="w-full h-32 bg-tarot-lightgray/30 border-2 border-tarot-gold/30 rounded-lg px-4 py-3 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors resize-none"
-          />
-          <p className="text-tarot-gray/40 text-xs mt-2 font-crimson">
-            例如：我想了解我在事业发展方面的前景 / 我最近在感情上遇到困惑 / 我的财务状况需要改善
-          </p>
+        <div className="flex gap-4">
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={onSave}
+            className="flex-1 py-4 rounded-xl font-decorative text-xl bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all"
+          >
+            保存草稿
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => {
+              if (validateForm() && isComplete) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => {
+                  onSubmit({ 
+                    selectedCards, 
+                    userContext: '', 
+                    spread: selectedSpread!, 
+                    orderId,
+                    title,
+                    customerGender,
+                    relatedOrderId,
+                    customerInfo,
+                    customerStatement,
+                    customerQuestion
+                  });
+                }, 500);
+              }
+            }}
+            disabled={!isComplete}
+            className="flex-1 py-4 rounded-xl font-decorative text-xl bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-tarot-gold/30 transition-all"
+          >
+            {isComplete ? '开始解读' : `请选择 ${requiredCards} 张牌卡`}
+          </motion.button>
         </div>
-
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={() => {
-            if (validateForm() && isComplete) {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              setTimeout(() => {
-                onSubmit({ 
-                  selectedCards, 
-                  userContext, 
-                  spread: selectedSpread!, 
-                  orderId,
-                  title,
-                  customerGender,
-                  relatedOrderId,
-                  customerInfo,
-                  customerStatement,
-                  customerQuestion
-                });
-              }, 500);
-            }
-          }}
-          disabled={!isComplete}
-          className="w-full py-4 rounded-xl font-decorative text-xl bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-tarot-gold/30 transition-all"
-        >
-          {isComplete ? '开始解读' : `请选择 ${requiredCards} 张牌卡`}
-        </motion.button>
       </div>
     </motion.div>
   );

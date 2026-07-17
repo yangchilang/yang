@@ -34,11 +34,16 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
         const mapped: ReadingRecord[] = data.readings.map((r) => ({
           id: String(r.id),
           selectedCards: JSON.parse(r.cards),
-          interpretation: r.interpretation,
+          interpretation: r.interpretation || '',
           userContext: r.user_context || '',
           createdAt: r.created_at,
           orderId: r.order_id,
           title: r.title || '',
+          customerGender: r.customer_gender,
+          relatedOrderId: r.related_order_id,
+          customerInfo: r.customer_info,
+          customerStatement: r.customer_statement,
+          customerQuestion: r.customer_question,
         }));
         setRecords(mapped);
       } else {
