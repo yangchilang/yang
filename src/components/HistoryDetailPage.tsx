@@ -94,7 +94,7 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
         
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
           <div className="text-tarot-gold font-decorative text-sm opacity-80">
-            AI 塔罗解读
+            塔罗解读
           </div>
           <div className="text-tarot-gray/60 font-crimson text-xs">
             {formatDate(record.createdAt)}
@@ -258,7 +258,7 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
             ✦ ★ ✦
           </div>
           <div className="text-tarot-gold/50 font-decorative text-xs">
-            神秘塔罗 · AI 解读
+            神秘塔罗 · 智慧解读
           </div>
         </div>
       </div>

@@ -59,8 +59,8 @@ function App() {
       setInterpretation(reading);
       await handleSaveReading();
     } catch (error) {
-      console.error('Failed to get AI interpretation:', error);
-      setInterpretation('抱歉，AI解读暂时无法获取，请稍后再试。');
+      console.error('Failed to get interpretation:', error);
+      setInterpretation('抱歉，解读暂时无法获取，请稍后再试。');
     } finally {
       setIsLoading(false);
     }

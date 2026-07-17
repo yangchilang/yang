@@ -442,7 +442,7 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
         <div className="bg-white rounded-xl p-6 border border-tarot-gold/20 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-decorative text-tarot-gray">占卜背景（选填）</h2>
-            <span className="text-tarot-gray/50 text-sm font-crimson">帮助AI更精准地解读</span>
+            <span className="text-tarot-gray/50 text-sm font-crimson">帮助更精准地解读</span>
           </div>
           <textarea
             value={userContext}
@@ -480,7 +480,7 @@ export function InputPhase({ onSubmit }: InputPhaseProps) {
           disabled={!isComplete}
           className="w-full py-4 rounded-xl font-decorative text-xl bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-tarot-gold/30 transition-all"
         >
-          {isComplete ? '开始 AI 解读' : `请选择 ${requiredCards} 张牌卡`}
+          {isComplete ? '开始解读' : `请选择 ${requiredCards} 张牌卡`}
         </motion.button>
       </div>
     </motion.div>
