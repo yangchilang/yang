@@ -23,7 +23,7 @@ export interface User {
 }
 
 export async function login(data: LoginRequest): Promise<AuthResponse> {
-  const response = await apiRequest<AuthResponse>('/api/auth/login', {
+  const response = await apiRequest<AuthResponse>('/auth/login', {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -37,7 +37,7 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
 }
 
 export async function getCurrentUser(): Promise<User> {
-  const response = await apiRequest<User>('/api/auth/me');
+  const response = await apiRequest<User>('/auth/me');
 
   if (response.success && response.data) {
     return response.data;

@@ -95,7 +95,7 @@ export function getReadingRecordById(id: string): ReadingRecord | undefined {
 
 export async function fetchReadingHistory(page = 1, limit = 10): Promise<PaginatedReadings | null> {
   try {
-    const response = await apiRequest<PaginatedReadings>(`/api/readings?page=${page}&limit=${limit}`);
+    const response = await apiRequest<PaginatedReadings>(`/readings?page=${page}&limit=${limit}`);
     if (response.success && response.data) {
       return response.data;
     }
@@ -119,7 +119,7 @@ export async function createReadingRecord(
   customerQuestion?: string
 ): Promise<ReadingRecord | null> {
   try {
-    const response = await apiRequest<BackendReading>('/api/readings', {
+    const response = await apiRequest<BackendReading>('/readings', {
       method: 'POST',
       body: JSON.stringify({
         cards,
@@ -146,7 +146,7 @@ export async function createReadingRecord(
 
 export async function deleteBackendReading(id: number): Promise<boolean> {
   try {
-    const response = await apiRequest<void>(`/api/readings/${id}`, {
+    const response = await apiRequest<void>(`/readings/${id}`, {
       method: 'DELETE',
     });
     return response.success;
@@ -158,7 +158,7 @@ export async function deleteBackendReading(id: number): Promise<boolean> {
 
 export async function searchReadings(keyword: string): Promise<ReadingRecord[]> {
   try {
-    const response = await apiRequest<{ readings: BackendReading[] }>(`/api/readings/search?keyword=${encodeURIComponent(keyword)}`);
+    const response = await apiRequest<{ readings: BackendReading[] }>(`/readings/search?keyword=${encodeURIComponent(keyword)}`);
     if (response.success && response.data?.readings) {
       return response.data.readings.map(r => backendToRecord(r));
     }
