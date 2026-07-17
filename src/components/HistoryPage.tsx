@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ReadingRecord } from '../types';
+import { ReadingRecord, SelectedCard } from '../types';
 import {
   getReadingHistory,
   deleteReadingRecord,
@@ -28,31 +28,45 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
 
   const loadRecords = async () => {
     setIsLoading(true);
-    if (isAuthenticated) {
-      const data = await fetchReadingHistory();
-      if (data) {
-        const mapped: ReadingRecord[] = data.readings.map((r) => ({
-          id: String(r.id),
-          selectedCards: JSON.parse(r.cards),
-          interpretation: r.interpretation || '',
-          userContext: r.user_context || '',
-          createdAt: r.created_at,
-          orderId: r.order_id,
-          title: r.title || '',
-          customerGender: r.customer_gender,
-          relatedOrderId: r.related_order_id,
-          customerInfo: r.customer_info,
-          customerStatement: r.customer_statement,
-          customerQuestion: r.customer_question,
-        }));
-        setRecords(mapped);
+    try {
+      if (isAuthenticated) {
+        const data = await fetchReadingHistory();
+        if (data) {
+          const mapped: ReadingRecord[] = data.readings.map((r) => {
+            let selectedCards: SelectedCard[] = [];
+            try {
+              selectedCards = r.cards ? JSON.parse(r.cards) : [];
+            } catch {
+              selectedCards = [];
+            }
+            return {
+              id: String(r.id),
+              selectedCards,
+              interpretation: r.interpretation || '',
+              userContext: r.user_context || '',
+              createdAt: r.created_at,
+              orderId: r.order_id,
+              title: r.title || '',
+              customerGender: r.customer_gender,
+              relatedOrderId: r.related_order_id,
+              customerInfo: r.customer_info,
+              customerStatement: r.customer_statement,
+              customerQuestion: r.customer_question,
+            };
+          });
+          setRecords(mapped);
+        } else {
+          setRecords([]);
+        }
       } else {
-        setRecords([]);
+        setRecords(getReadingHistory());
       }
-    } else {
-      setRecords(getReadingHistory());
+    } catch (error) {
+      console.error('Failed to load records:', error);
+      setRecords([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleSearch = async () => {
@@ -73,7 +87,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
 
   useEffect(() => {
     loadRecords();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, isAuthenticated]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();

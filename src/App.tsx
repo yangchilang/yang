@@ -5,6 +5,7 @@ import { ReadingPhase } from './components/ReadingPhase';
 import { Navbar } from './components/Navbar';
 import { MobileOptimizedBackground } from './components/MobileOptimizedBackground';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Auth/Login';
 import { SelectedCard, ReadingInput, Spread, ReadingRecord } from './types';
 import { getAIInterpretation } from './services/aiService';
@@ -172,46 +173,50 @@ function App() {
           return <Login />;
         }
         return (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center">
-                  <div className="relative w-16 h-16 mx-auto mb-4">
-                    <div className="absolute inset-0 border-4 border-tarot-gold/20 rounded-full" />
-                    <div className="absolute inset-2 border-4 border-tarot-gold/40 rounded-full animate-spin" style={{ animationDuration: '1.5s' }} />
+          <ErrorBoundary>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center min-h-[60vh]">
+                  <div className="text-center">
+                    <div className="relative w-16 h-16 mx-auto mb-4">
+                      <div className="absolute inset-0 border-4 border-tarot-gold/20 rounded-full" />
+                      <div className="absolute inset-2 border-4 border-tarot-gold/40 rounded-full animate-spin" style={{ animationDuration: '1.5s' }} />
+                    </div>
+                    <p className="text-tarot-gray/60 font-crimson">加载中...</p>
                   </div>
-                  <p className="text-tarot-gray/60 font-crimson">加载中...</p>
                 </div>
-              </div>
-            }
-          >
-            <HistoryPage
-              onViewDetail={handleViewHistoryDetail}
-              onNewReading={() => setView('new-reading')}
-              refreshTrigger={refreshHistory}
-            />
-          </Suspense>
+              }
+            >
+              <HistoryPage
+                onViewDetail={handleViewHistoryDetail}
+                onNewReading={() => setView('new-reading')}
+                refreshTrigger={refreshHistory}
+              />
+            </Suspense>
+          </ErrorBoundary>
         );
       case 'history-detail':
         return currentRecord ? (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center">
-                  <div className="relative w-16 h-16 mx-auto mb-4">
-                    <div className="absolute inset-0 border-4 border-tarot-gold/20 rounded-full" />
-                    <div className="absolute inset-2 border-4 border-tarot-gold/40 rounded-full animate-spin" style={{ animationDuration: '1.5s' }} />
+          <ErrorBoundary>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center min-h-[60vh]">
+                  <div className="text-center">
+                    <div className="relative w-16 h-16 mx-auto mb-4">
+                      <div className="absolute inset-0 border-4 border-tarot-gold/20 rounded-full" />
+                      <div className="absolute inset-2 border-4 border-tarot-gold/40 rounded-full animate-spin" style={{ animationDuration: '1.5s' }} />
+                    </div>
+                    <p className="text-tarot-gray/60 font-crimson">加载中...</p>
                   </div>
-                  <p className="text-tarot-gray/60 font-crimson">加载中...</p>
                 </div>
-              </div>
-            }
-          >
-            <HistoryDetailPage
-              record={currentRecord}
-              onBack={() => setView('home')}
-            />
-          </Suspense>
+              }
+            >
+              <HistoryDetailPage
+                record={currentRecord}
+                onBack={() => setView('home')}
+              />
+            </Suspense>
+          </ErrorBoundary>
         ) : null;
       case 'new-reading':
         return (
