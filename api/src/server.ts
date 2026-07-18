@@ -25,16 +25,18 @@ async function startServer() {
   }
 }
 
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  closeDatabase();
+async function shutdownGracefully(signal: string) {
+  console.log(`\n🛑 Shutting down gracefully (${signal})...`);
+  try {
+    await closeDatabase();
+    console.log('✅ Database connection closed');
+  } catch (error) {
+    console.error('❌ Error closing database:', error);
+  }
   process.exit(0);
-});
+}
 
-process.on('SIGTERM', () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  closeDatabase();
-  process.exit(0);
-});
+process.on('SIGINT', () => shutdownGracefully('SIGINT'));
+process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
 
 startServer();

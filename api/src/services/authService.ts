@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { getDatabase, saveDatabase } from '../utils/database';
+import { query } from '../utils/database';
 import { User } from '../types';
 import { generateToken } from '../config/jwt';
 
@@ -9,14 +9,12 @@ export async function createUser(
   username: string,
   password: string
 ): Promise<{ user: Omit<User, 'password'>; token: string }> {
-  const db = getDatabase();
-
-  const existingUser = db.exec(
-    'SELECT id FROM users WHERE username = ?',
+  const existingUser = await query(
+    'SELECT id FROM users WHERE username = $1',
     [username]
   );
 
-  if (existingUser.length > 0 && existingUser[0].values.length > 0) {
+  if (existingUser.rows.length > 0) {
     throw new Error('用户名已被注册');
   }
 
@@ -26,27 +24,17 @@ export async function createUser(
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-  db.run(
-    'INSERT INTO users (username, password) VALUES (?, ?)',
+  const result = await query(
+    'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, created_at, updated_at',
     [username, hashedPassword]
   );
 
-  saveDatabase();
-
-  const result = db.exec('SELECT last_insert_rowid() as id');
-  const userId = result[0].values[0][0] as number;
-
-  const userResult = db.exec(
-    'SELECT id, username, created_at, updated_at FROM users WHERE id = ?',
-    [userId]
-  );
-
-  const userRow = userResult[0].values[0];
+  const userRow = result.rows[0];
   const user: Omit<User, 'password'> = {
-    id: userRow[0] as number,
-    username: userRow[1] as string,
-    created_at: userRow[2] as string,
-    updated_at: userRow[3] as string,
+    id: userRow.id,
+    username: userRow.username,
+    created_at: userRow.created_at.toISOString(),
+    updated_at: userRow.updated_at.toISOString(),
   };
 
   const token = generateToken({ userId: user.id, username: user.username });
@@ -58,21 +46,19 @@ export async function loginUser(
   username: string,
   password: string
 ): Promise<{ user: Omit<User, 'password'>; token: string }> {
-  const db = getDatabase();
+  const userResult = await query('SELECT * FROM users WHERE username = $1', [username]);
 
-  const userResult = db.exec('SELECT * FROM users WHERE username = ?', [username]);
-
-  if (userResult.length === 0 || userResult[0].values.length === 0) {
+  if (userResult.rows.length === 0) {
     throw new Error('用户名或密码错误');
   }
 
-  const userRow = userResult[0].values[0];
+  const userRow = userResult.rows[0];
   const user: User = {
-    id: userRow[0] as number,
-    username: userRow[1] as string,
-    password: userRow[2] as string,
-    created_at: userRow[3] as string,
-    updated_at: userRow[4] as string,
+    id: userRow.id,
+    username: userRow.username,
+    password: userRow.password,
+    created_at: userRow.created_at.toISOString(),
+    updated_at: userRow.updated_at.toISOString(),
   };
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -93,23 +79,21 @@ export async function loginUser(
   return { user: userWithoutPassword, token };
 }
 
-export function getUserById(userId: number): Omit<User, 'password'> | null {
-  const db = getDatabase();
-
-  const userResult = db.exec(
-    'SELECT id, username, created_at, updated_at FROM users WHERE id = ?',
+export async function getUserById(userId: number): Promise<Omit<User, 'password'> | null> {
+  const userResult = await query(
+    'SELECT id, username, created_at, updated_at FROM users WHERE id = $1',
     [userId]
   );
 
-  if (userResult.length === 0 || userResult[0].values.length === 0) {
+  if (userResult.rows.length === 0) {
     return null;
   }
 
-  const userRow = userResult[0].values[0];
+  const userRow = userResult.rows[0];
   return {
-    id: userRow[0] as number,
-    username: userRow[1] as string,
-    created_at: userRow[2] as string,
-    updated_at: userRow[3] as string,
+    id: userRow.id,
+    username: userRow.username,
+    created_at: userRow.created_at.toISOString(),
+    updated_at: userRow.updated_at.toISOString(),
   };
 }

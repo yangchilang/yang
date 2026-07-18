@@ -64,7 +64,7 @@ export async function getCurrentUser(
       return;
     }
 
-    const user = getUserById(req.user.userId);
+    const user = await getUserById(req.user.userId);
 
     if (!user) {
       res.status(404).json({

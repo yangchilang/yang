@@ -4,7 +4,6 @@ import {
   createReading,
   getReadingsByUserId,
   getReadingById,
-  getReadingByOrderId,
   deleteReading,
   searchReadings,
   getRelatedReadings,
@@ -83,7 +82,7 @@ export async function create(req: AuthRequest, res: Response): Promise<void> {
     }
 
     const { cards, interpretation, user_context, order_id, title, customer_gender, related_order_id, customer_info, customer_statement, customer_question } = req.body;
-    const reading = createReading(
+    const reading = await createReading(
       req.user.userId,
       cards as SelectedCard[],
       interpretation,
@@ -122,7 +121,7 @@ export async function getAll(req: AuthRequest, res: Response): Promise<void> {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
 
-    const { readings, total } = getReadingsByUserId(
+    const { readings, total } = await getReadingsByUserId(
       req.user.userId,
       page,
       limit
@@ -173,7 +172,7 @@ export async function getById(
       return;
     }
 
-    const reading = getReadingById(readingId, req.user.userId);
+    const reading = await getReadingById(readingId, req.user.userId);
 
     if (!reading) {
       res.status(404).json({
@@ -218,7 +217,7 @@ export async function remove(
       return;
     }
 
-    const deleted = deleteReading(readingId, req.user.userId);
+    const deleted = await deleteReading(readingId, req.user.userId);
 
     if (!deleted) {
       res.status(404).json({
@@ -260,7 +259,7 @@ export async function search(req: AuthRequest, res: Response): Promise<void> {
       return;
     }
 
-    const readings = searchReadings(keyword, req.user.userId);
+    const readings = await searchReadings(keyword, req.user.userId);
 
     if (readings.length === 0) {
       res.status(200).json({
@@ -282,7 +281,7 @@ export async function search(req: AuthRequest, res: Response): Promise<void> {
     });
 
     for (const orderId of relatedOrderIds) {
-      const related = getRelatedReadings(orderId, undefined, req.user.userId);
+      const related = await getRelatedReadings(orderId, undefined, req.user.userId);
       related.forEach(r => {
         allRelatedReadings.set(r.id, r);
       });

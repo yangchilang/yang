@@ -1,7 +1,7 @@
-import { getDatabase, saveDatabase } from '../utils/database';
+import { query } from '../utils/database';
 import { Reading, SelectedCard } from '../types';
 
-export function createReading(
+export async function createReading(
   userId: number,
   cards: SelectedCard[],
   interpretation: string,
@@ -13,234 +13,206 @@ export function createReading(
   customerInfo?: string,
   customerStatement?: string,
   customerQuestion?: string
-): Reading {
-  const db = getDatabase();
+): Promise<Reading> {
   const cardsJson = JSON.stringify(cards);
 
-  db.run(
-    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, title, customer_gender, related_order_id, customer_info, customer_statement, customer_question) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+  const result = await query(
+    'INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, title, customer_gender, related_order_id, customer_info, customer_statement, customer_question) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
     [userId, cardsJson, interpretation, userContext, orderId, title || null, customerGender || null, relatedOrderId || null, customerInfo || null, customerStatement || null, customerQuestion || null]
   );
 
-  saveDatabase();
-
-  const result = db.exec('SELECT last_insert_rowid() as id');
-  const readingId = result[0].values[0][0] as number;
-
-  const readingResult = db.exec('SELECT * FROM readings WHERE id = ?', [readingId]);
-  const readingRow = readingResult[0].values[0];
-
+  const row = result.rows[0];
   return {
-    id: readingRow[0] as number,
-    user_id: readingRow[1] as number,
-    cards: readingRow[2] as string,
-    interpretation: readingRow[3] as string,
-    user_context: readingRow[4] as string,
-    order_id: readingRow[5] as string,
-    title: readingRow[6] as string | undefined,
-    customer_gender: readingRow[7] as string | undefined,
-    related_order_id: readingRow[8] as string | undefined,
-    customer_info: readingRow[9] as string | undefined,
-    customer_statement: readingRow[10] as string | undefined,
-    customer_question: readingRow[11] as string | undefined,
-    created_at: readingRow[12] as string,
+    id: row.id,
+    user_id: row.user_id,
+    cards: row.cards,
+    interpretation: row.interpretation,
+    user_context: row.user_context,
+    order_id: row.order_id,
+    title: row.title,
+    customer_gender: row.customer_gender,
+    related_order_id: row.related_order_id,
+    customer_info: row.customer_info,
+    customer_statement: row.customer_statement,
+    customer_question: row.customer_question,
+    created_at: row.created_at.toISOString(),
   };
 }
 
-export function getReadingsByUserId(
+export async function getReadingsByUserId(
   userId: number,
   page: number = 1,
   limit: number = 10
-): { readings: Reading[]; total: number } {
-  const db = getDatabase();
+): Promise<{ readings: Reading[]; total: number }> {
   const offset = (page - 1) * limit;
 
-  const totalResult = db.exec(
-    'SELECT COUNT(*) as count FROM readings WHERE user_id = ?',
+  const totalResult = await query(
+    'SELECT COUNT(*) as count FROM readings WHERE user_id = $1',
     [userId]
   );
-  const total = totalResult[0].values[0][0] as number;
+  const total = parseInt(totalResult.rows[0].count, 10);
 
-  const readingsResult = db.exec(
-    'SELECT * FROM readings WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+  const readingsResult = await query(
+    'SELECT * FROM readings WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
     [userId, limit, offset]
   );
 
-  const readings: Reading[] = readingsResult[0].values.map((row) => ({
-    id: row[0] as number,
-    user_id: row[1] as number,
-    cards: row[2] as string,
-    interpretation: row[3] as string,
-    user_context: row[4] as string,
-    order_id: row[5] as string,
-    title: row[6] as string | undefined,
-    customer_gender: row[7] as string | undefined,
-    related_order_id: row[8] as string | undefined,
-    customer_info: row[9] as string | undefined,
-    customer_statement: row[10] as string | undefined,
-    customer_question: row[11] as string | undefined,
-    created_at: row[12] as string,
+  const readings: Reading[] = readingsResult.rows.map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    cards: row.cards,
+    interpretation: row.interpretation,
+    user_context: row.user_context,
+    order_id: row.order_id,
+    title: row.title,
+    customer_gender: row.customer_gender,
+    related_order_id: row.related_order_id,
+    customer_info: row.customer_info,
+    customer_statement: row.customer_statement,
+    customer_question: row.customer_question,
+    created_at: row.created_at.toISOString(),
   }));
 
   return { readings, total };
 }
 
-export function getReadingById(
+export async function getReadingById(
   readingId: number,
   userId: number
-): Reading | null {
-  const db = getDatabase();
-
-  const result = db.exec(
-    'SELECT * FROM readings WHERE id = ? AND user_id = ?',
+): Promise<Reading | null> {
+  const result = await query(
+    'SELECT * FROM readings WHERE id = $1 AND user_id = $2',
     [readingId, userId]
   );
 
-  if (result.length === 0 || result[0].values.length === 0) {
+  if (result.rows.length === 0) {
     return null;
   }
 
-  const row = result[0].values[0];
+  const row = result.rows[0];
   return {
-    id: row[0] as number,
-    user_id: row[1] as number,
-    cards: row[2] as string,
-    interpretation: row[3] as string,
-    user_context: row[4] as string,
-    order_id: row[5] as string,
-    title: row[6] as string | undefined,
-    customer_gender: row[7] as string | undefined,
-    related_order_id: row[8] as string | undefined,
-    customer_info: row[9] as string | undefined,
-    customer_statement: row[10] as string | undefined,
-    customer_question: row[11] as string | undefined,
-    created_at: row[12] as string,
+    id: row.id,
+    user_id: row.user_id,
+    cards: row.cards,
+    interpretation: row.interpretation,
+    user_context: row.user_context,
+    order_id: row.order_id,
+    title: row.title,
+    customer_gender: row.customer_gender,
+    related_order_id: row.related_order_id,
+    customer_info: row.customer_info,
+    customer_statement: row.customer_statement,
+    customer_question: row.customer_question,
+    created_at: row.created_at.toISOString(),
   };
 }
 
-export function getReadingByOrderId(
+export async function getReadingByOrderId(
   orderId: string,
   userId: number
-): Reading | null {
-  const db = getDatabase();
-
-  const result = db.exec(
-    'SELECT * FROM readings WHERE order_id = ? AND user_id = ?',
+): Promise<Reading | null> {
+  const result = await query(
+    'SELECT * FROM readings WHERE order_id = $1 AND user_id = $2',
     [orderId, userId]
   );
 
-  if (result.length === 0 || result[0].values.length === 0) {
+  if (result.rows.length === 0) {
     return null;
   }
 
-  const row = result[0].values[0];
+  const row = result.rows[0];
   return {
-    id: row[0] as number,
-    user_id: row[1] as number,
-    cards: row[2] as string,
-    interpretation: row[3] as string,
-    user_context: row[4] as string,
-    order_id: row[5] as string,
-    title: row[6] as string | undefined,
-    customer_gender: row[7] as string | undefined,
-    related_order_id: row[8] as string | undefined,
-    customer_info: row[9] as string | undefined,
-    customer_statement: row[10] as string | undefined,
-    customer_question: row[11] as string | undefined,
-    created_at: row[12] as string,
+    id: row.id,
+    user_id: row.user_id,
+    cards: row.cards,
+    interpretation: row.interpretation,
+    user_context: row.user_context,
+    order_id: row.order_id,
+    title: row.title,
+    customer_gender: row.customer_gender,
+    related_order_id: row.related_order_id,
+    customer_info: row.customer_info,
+    customer_statement: row.customer_statement,
+    customer_question: row.customer_question,
+    created_at: row.created_at.toISOString(),
   };
 }
 
-export function searchReadings(
+export async function searchReadings(
   keyword: string,
   userId: number
-): Reading[] {
-  const db = getDatabase();
+): Promise<Reading[]> {
   const pattern = `%${keyword}%`;
 
-  const result = db.exec(
-    'SELECT * FROM readings WHERE user_id = ? AND (order_id LIKE ? OR related_order_id LIKE ? OR title LIKE ?) ORDER BY created_at DESC',
+  const result = await query(
+    'SELECT * FROM readings WHERE user_id = $1 AND (order_id LIKE $2 OR related_order_id LIKE $3 OR title LIKE $4) ORDER BY created_at DESC',
     [userId, pattern, pattern, pattern]
   );
 
-  if (result.length === 0 || result[0].values.length === 0) {
-    return [];
-  }
-
-  return result[0].values.map((row) => ({
-    id: row[0] as number,
-    user_id: row[1] as number,
-    cards: row[2] as string,
-    interpretation: row[3] as string,
-    user_context: row[4] as string,
-    order_id: row[5] as string,
-    title: row[6] as string | undefined,
-    customer_gender: row[7] as string | undefined,
-    related_order_id: row[8] as string | undefined,
-    customer_info: row[9] as string | undefined,
-    customer_statement: row[10] as string | undefined,
-    customer_question: row[11] as string | undefined,
-    created_at: row[12] as string,
+  return result.rows.map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    cards: row.cards,
+    interpretation: row.interpretation,
+    user_context: row.user_context,
+    order_id: row.order_id,
+    title: row.title,
+    customer_gender: row.customer_gender,
+    related_order_id: row.related_order_id,
+    customer_info: row.customer_info,
+    customer_statement: row.customer_statement,
+    customer_question: row.customer_question,
+    created_at: row.created_at.toISOString(),
   }));
 }
 
-export function getRelatedReadings(
+export async function getRelatedReadings(
   orderId: string,
   relatedOrderId: string | undefined,
   userId: number
-): Reading[] {
-  const db = getDatabase();
-  const conditions: string[] = ['user_id = ?'];
-  const params: any[] = [userId];
-
-  conditions.push('order_id = ?');
-  params.push(orderId);
+): Promise<Reading[]> {
+  let conditions = 'user_id = $1 AND (order_id = $2';
+  const params: any[] = [userId, orderId];
 
   if (relatedOrderId) {
-    conditions.push('related_order_id = ?');
+    conditions += ' OR related_order_id = $3)';
     params.push(relatedOrderId);
+  } else {
+    conditions += ')';
   }
 
-  const result = db.exec(
-    `SELECT * FROM readings WHERE (${conditions.join(' OR ')}) ORDER BY created_at DESC`,
+  const result = await query(
+    `SELECT * FROM readings WHERE ${conditions} ORDER BY created_at DESC`,
     params
   );
 
-  if (result.length === 0 || result[0].values.length === 0) {
-    return [];
-  }
-
-  return result[0].values.map((row) => ({
-    id: row[0] as number,
-    user_id: row[1] as number,
-    cards: row[2] as string,
-    interpretation: row[3] as string,
-    user_context: row[4] as string,
-    order_id: row[5] as string,
-    title: row[6] as string | undefined,
-    customer_gender: row[7] as string | undefined,
-    related_order_id: row[8] as string | undefined,
-    customer_info: row[9] as string | undefined,
-    customer_statement: row[10] as string | undefined,
-    customer_question: row[11] as string | undefined,
-    created_at: row[12] as string,
+  return result.rows.map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    cards: row.cards,
+    interpretation: row.interpretation,
+    user_context: row.user_context,
+    order_id: row.order_id,
+    title: row.title,
+    customer_gender: row.customer_gender,
+    related_order_id: row.related_order_id,
+    customer_info: row.customer_info,
+    customer_statement: row.customer_statement,
+    customer_question: row.customer_question,
+    created_at: row.created_at.toISOString(),
   }));
 }
 
-export function deleteReading(readingId: number, userId: number): boolean {
-  const db = getDatabase();
-
-  const existing = db.exec(
-    'SELECT id FROM readings WHERE id = ? AND user_id = ?',
+export async function deleteReading(readingId: number, userId: number): Promise<boolean> {
+  const existing = await query(
+    'SELECT id FROM readings WHERE id = $1 AND user_id = $2',
     [readingId, userId]
   );
 
-  if (existing.length === 0 || existing[0].values.length === 0) {
+  if (existing.rows.length === 0) {
     return false;
   }
 
-  db.run('DELETE FROM readings WHERE id = ? AND user_id = ?', [readingId, userId]);
-  saveDatabase();
-
+  await query('DELETE FROM readings WHERE id = $1 AND user_id = $2', [readingId, userId]);
   return true;
 }
