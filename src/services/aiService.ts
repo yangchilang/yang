@@ -1,7 +1,7 @@
 import { ReadingInput } from '../types';
 
-const API_KEY = import.meta.env.VITE_AI_API_KEY || 'sk-bc0642954c244f0996f2c2e7122c335c';
-const API_URL = import.meta.env.VITE_AI_API_URL || 'https://api.deepseek.com/v1/chat/completions';
+const API_KEY = import.meta.env.VITE_API_KEY || 'sk-bc0642954c244f0996f2c2e7122c335c';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.deepseek.com/v1/chat/completions';
 
 function buildPrompt(input: ReadingInput): string {
   const { selectedCards, spread, customerGender, customerInfo, customerStatement, customerQuestion } = input;
@@ -46,7 +46,7 @@ function buildPrompt(input: ReadingInput): string {
  
  1. 每张牌先做简短、准确的专业牌义解释。 
  2. 再结合这张牌所处的牌位以及客户的现实情况展开。 
- 3. 解读必须像真人塔罗师在私信中慢慢讲述，而不是AI分析报告。 
+ 3. 解读必须像真人塔罗师在私信中慢慢讲述，而不是格式化的分析报告。 
  4. 既要体现塔罗专业性，也要回应客户真正关心的问题。 
  5. 不做绝对预言，不把牌面说成已经确定的现实。 
  6. 不机械套用固定答案，同一张牌处在不同牌位时，解释方向必须有所区别。 
@@ -136,7 +136,7 @@ function buildPrompt(input: ReadingInput): string {
  
  这些句式只能作为语气参考，不要在每次解读中机械重复。 
  
- 【避免AI腔】 
+ 【避免机械腔】 
  
  不要频繁使用： 
  
@@ -275,7 +275,7 @@ ${allContext}
 现在请严格按照以上风格和规则进行解读。`;
 }
 
-export async function getAIInterpretation(input: ReadingInput): Promise<string> {
+export async function getInterpretation(input: ReadingInput): Promise<string> {
   try {
     const prompt = buildPrompt(input);
     
@@ -307,7 +307,7 @@ export async function getAIInterpretation(input: ReadingInput): Promise<string> 
     const content = data.choices?.[0]?.message?.content || '';
     return content.trim() || generateFallbackInterpretation(input);
   } catch (error) {
-    console.warn('AI API call failed, using fallback interpretation:', error);
+    console.warn('解读服务调用失败，使用备用解读:', error);
     return generateFallbackInterpretation(input);
   }
 }

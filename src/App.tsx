@@ -8,7 +8,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Auth/Login';
 import { SelectedCard, ReadingInput, Spread, ReadingRecord } from './types';
-import { getAIInterpretation } from './services/aiService';
+import { getInterpretation } from './services/aiService';
 import { saveReadingRecord, createReadingRecord } from './services/historyService';
 import { useAuthStore } from './store/authStore';
 
@@ -56,7 +56,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const reading = await getAIInterpretation(input);
+      const reading = await getInterpretation(input);
       setInterpretation(reading);
       await handleSaveReading();
     } catch (error) {

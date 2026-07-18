@@ -1,7 +1,7 @@
 {
-  "name": "ai-tarot-api",
+  "name": "tarot-api",
   "version": "1.0.0",
-  "description": "Backend API for AI Tarot Reading Application",
+  "description": "Backend API for Tarot Reading Application",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -10,7 +10,6 @@
   },
   "keywords": [
     "tarot",
-    "ai",
     "api",
     "express"
   ],

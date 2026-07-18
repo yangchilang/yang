@@ -1,6 +1,6 @@
-# AI 塔罗牌解读应用
+# 塔罗牌解读应用
 
-这是一个包含前后端的完整 Web 应用，提供 AI 塔罗牌解读服务，并支持用户注册登录和解读历史保存功能。
+这是一个包含前后端的完整 Web 应用，提供塔罗牌解读服务，并支持用户注册登录和解读历史保存功能。
 
 ## 项目结构
 
@@ -66,14 +66,14 @@ node test-api.js
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js 4
 - **Language**: TypeScript 5
-- **Database**: SQLite 3 (sql.js)
+- **Database**: PostgreSQL
 - **Auth**: JWT + bcryptjs
 - **Validation**: express-validator
 
 ### 前端
 - **Framework**: React 18
 - **Language**: TypeScript
-- **Build Tool**: Vite 5
+- **Build Tool**: Vite 6
 - **Styling**: Tailwind CSS 3
 - **Animation**: Framer Motion 10
 - **State**: Zustand
@@ -107,60 +107,66 @@ PORT=3001
 NODE_ENV=development
 JWT_SECRET=your_secret_key
 CORS_ORIGIN=http://localhost:5173
-DATABASE_PATH=./data/database.sqlite
+DATABASE_URL=postgresql://user:password@localhost:5432/database_name
 ```
 
 ### 前端 (.env)
 
 ```bash
 VITE_API_URL=http://localhost:3001
-VITE_AI_API_KEY=your_nvidia_api_key
+VITE_API_KEY=your_api_key
 ```
 
 ## 数据库
 
-应用使用 SQLite 数据库，数据库文件存储在 `api/data/database.sqlite`。
+应用使用 PostgreSQL 数据库。
 
 ### 数据表
 
 **users 表**
 - id (INTEGER, 主键)
-- email (TEXT, 唯一)
+- username (TEXT, 唯一)
 - password (TEXT, bcrypt 加密)
-- created_at (DATETIME)
-- updated_at (DATETIME)
+- created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
 
 **readings 表**
 - id (INTEGER, 主键)
 - user_id (INTEGER, 外键)
-- cards (TEXT, JSON 字符串)
+- cards (JSON)
 - interpretation (TEXT)
 - user_context (TEXT)
-- created_at (DATETIME)
+- order_id (TEXT)
+- title (TEXT)
+- customer_gender (TEXT)
+- related_order_id (TEXT)
+- customer_info (TEXT)
+- customer_statement (TEXT)
+- customer_question (TEXT)
+- created_at (TIMESTAMP)
 
 ## 生产部署
 
 ### 推荐部署平台
 
-- **前端**: Vercel (https://vercel.com)
+- **前端**: Cloudflare Pages
 - **后端**: Railway (https://railway.app)
-- **域名**: Namecheap / GoDaddy
+- **域名**: Cloudflare
 
 ### 部署步骤
 
-1. **前端部署到 Vercel**
-   - 连接 GitHub 仓库
-   - 配置环境变量
-   - 添加自定义域名
+1. **前端部署到 Cloudflare Pages**
+   - 构建前端：`npm run build`
+   - 部署：`npm run deploy`
+   - 配置自定义域名
 
 2. **后端部署到 Railway**
    - 连接 GitHub 仓库
+   - 添加 PostgreSQL 插件
    - 配置环境变量
-   - Railway 会自动处理 HTTPS
 
 3. **DNS 配置**
-   - 在域名提供商处配置 DNS 记录
-   - 指向 Vercel 和 Railway
+   - 在 Cloudflare 配置 DNS 记录
 
 ## 开发指南
 
@@ -184,7 +190,3 @@ test: 测试
 ## 许可证
 
 ISC
-
-## 作者
-
-AI Assistant

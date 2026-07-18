@@ -1,20 +1,20 @@
 @echo off
 chcp 65001 > nul
-title 塔罗AI - 一键启动
+title 塔罗 - 一键启动
 
 echo ========================================
-echo    塔罗AI - 一键启动脚本
+echo    塔罗 - 一键启动脚本
 echo ========================================
 echo.
 
 echo [1/2] 正在启动后端服务...
-start "塔罗AI-后端" cmd /k "cd /d %~dp0api && npm start"
+start "塔罗-后端" cmd /k "cd /d %~dp0api && npm start"
 
 timeout /t 3 /nobreak > nul
 
 echo.
 echo [2/2] 正在启动前端服务...
-start "塔罗AI-前端" cmd /k "cd /d %~dp0 && npm run dev"
+start "塔罗-前端" cmd /k "cd /d %~dp0 && npm run dev"
 
 echo.
 echo ========================================

@@ -1,5 +1,5 @@
 
-# AI塔罗牌解读应用 - 技术架构文档
+# 塔罗牌解读应用 - 技术架构文档
 
 ## 1. 系统架构
 
@@ -116,7 +116,7 @@ CNAME  www    [your-app].vercel.app
 #### 前端 (.env)
 ```bash
 VITE_API_URL=https://api.your-domain.com
-VITE_AI_API_KEY=your_nvidia_api_key
+VITE_API_KEY=your_api_key
 ```
 
 #### 后端 (.env)
@@ -163,7 +163,7 @@ src/
 │   ├── api.ts                  # API基础配置
 │   ├── authService.ts          # 认证相关API
 │   ├── readingService.ts        # 解读历史API
-│   └── aiService.ts            # AI解读服务
+│   └── aiService.ts            # 解读服务
 ├── store/
 │   ├── authStore.ts            # 认证状态管理
 │   └── readingStore.ts         # 解读历史状态管理
@@ -517,7 +517,7 @@ app.use(cors({
 ### 8.1 前端环境变量 (.env)
 ```bash
 VITE_API_URL=https://api.your-domain.com
-VITE_AI_API_KEY=your_nvidia_api_key_here
+VITE_API_KEY=your_api_key_here
 ```
 
 ### 8.2 后端环境变量 (.env)
@@ -781,5 +781,5 @@ test: 测试
 
 **版本**: 2.0.0
 **最后更新**: 2026-06-01
-**负责人**: AI Assistant
+**负责人**: 开发团队
 **备注**: 优化了部署策略，支持免费平台和.com域名部署
