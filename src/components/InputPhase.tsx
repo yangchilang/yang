@@ -34,7 +34,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   const handleSelectSpread = (spread: Spread) => {
     setSelectedSpread(spread);
     const initialCards: SelectedCard[] = spread.positions.map((pos) => ({
-      card: tarotCards[0],
+      card: { id: 0, name: '', nameCn: '', meaning: '', reversedMeaning: '', element: '', zodiac: '', keywords: [] },
       isReversed: false,
       position: pos.position,
       positionMeaning: pos.meaning
@@ -85,23 +85,27 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   const handleClearAll = () => {
     if (!selectedSpread) return;
     const initialCards: SelectedCard[] = selectedSpread.positions.map((pos) => ({
-      card: tarotCards[0],
+      card: { id: 0, name: '', nameCn: '', meaning: '', reversedMeaning: '', element: '', zodiac: '', keywords: [] },
       isReversed: false,
       position: pos.position,
       positionMeaning: pos.meaning
     }));
     setSelectedCards(initialCards);
+    const initialInputValues: Record<number, string> = {};
+    selectedSpread.positions.forEach(pos => {
+      initialInputValues[pos.position] = '';
+    });
+    setCardInputValues(initialInputValues);
   };
 
   const handleCardInputChange = (position: number, value: string) => {
-    const card = tarotCards.find(c => c.nameCn.includes(value) || c.name.includes(value));
+    setCardInputValues(prev => ({ ...prev, [position]: value }));
+    
+    const card = tarotCards.find(c => c.nameCn === value || c.name === value);
     if (card) {
       setSelectedCards(prev => prev.map(c => 
         c.position === position ? { ...c, card } : c
       ));
-      setCardInputValues(prev => ({ ...prev, [position]: '' }));
-    } else {
-      setCardInputValues(prev => ({ ...prev, [position]: value }));
     }
   };
 
@@ -110,7 +114,8 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   }
 
   const requiredCards = selectedSpread?.positions.length || 0;
-  const isComplete = selectedCards.length === requiredCards;
+  const isComplete = selectedCards.length === requiredCards && 
+    selectedCards.every(card => card.card.nameCn && card.card.nameCn.trim());
 
   return (
     <motion.div
