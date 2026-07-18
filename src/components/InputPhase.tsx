@@ -15,6 +15,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   const [step, setStep] = useState<Step>('spread');
   const [selectedSpread, setSelectedSpread] = useState<Spread | null>(null);
   const [selectedCards, setSelectedCards] = useState<SelectedCard[]>([]);
+  const [cardInputValues, setCardInputValues] = useState<Record<number, string>>({});
   
   const [title, setTitle] = useState('');
   const [orderId, setOrderId] = useState('');
@@ -39,6 +40,11 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
       positionMeaning: pos.meaning
     }));
     setSelectedCards(initialCards);
+    const initialInputValues: Record<number, string> = {};
+    spread.positions.forEach(pos => {
+      initialInputValues[pos.position] = '';
+    });
+    setCardInputValues(initialInputValues);
     setTitle(spread.name);
     setStep('combined');
   };
@@ -93,6 +99,9 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
       setSelectedCards(prev => prev.map(c => 
         c.position === position ? { ...c, card } : c
       ));
+      setCardInputValues(prev => ({ ...prev, [position]: '' }));
+    } else {
+      setCardInputValues(prev => ({ ...prev, [position]: value }));
     }
   };
 
@@ -301,7 +310,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
                       <label className="block text-tarot-gray/60 text-xs font-crimson mb-1">牌面</label>
                       <input
                         type="text"
-                        value={selectedCard?.card.nameCn || ''}
+                        value={cardInputValues[pos.position] || selectedCard?.card.nameCn || ''}
                         onChange={(e) => handleCardInputChange(pos.position, e.target.value)}
                         placeholder={`请输入第 ${pos.position} 张牌`}
                         className="w-full bg-white/80 border border-tarot-gold/30 rounded-lg px-3 py-2 text-sm font-crimson text-tarot-gray placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors"
