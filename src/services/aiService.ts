@@ -1,7 +1,7 @@
 import { ReadingInput } from '../types';
 
 const API_KEY = import.meta.env.VITE_API_KEY || 'sk-bc0642954c244f0996f2c2e7122c335c';
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.deepseek.com/v1/chat/completions';
+const API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 function buildPrompt(input: ReadingInput): string {
   const { selectedCards, spread, customerGender, customerInfo, customerStatement, customerQuestion } = input;

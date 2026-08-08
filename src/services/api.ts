@@ -4,7 +4,7 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export function getApiUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
