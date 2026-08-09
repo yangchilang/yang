@@ -1,74 +1,80 @@
 # 塔罗牌解读应用
 
-这是一个包含前后端的完整 Web 应用，提供塔罗牌解读服务，并支持用户注册登录和解读历史保存功能。
+基于 Cloudflare Pages 全栈部署的塔罗牌解读应用，支持用户登录、塔罗解读和历史记录管理。
 
 ## 项目结构
 
 ```
 g:\1\1/
-├── api/                    # 后端 Express.js API
-│   ├── src/
-│   │   ├── config/        # 配置文件
-│   │   ├── controllers/   # 控制器
-│   │   ├── middleware/    # 中间件
-│   │   ├── routes/        # 路由
-│   │   ├── services/      # 服务层
-│   │   ├── types/         # TypeScript 类型
-│   │   ├── utils/         # 工具函数
-│   │   ├── app.ts         # Express 应用
-│   │   └── server.ts      # 服务器入口
-│   ├── data/              # 数据库文件目录
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env               # 环境变量
-│   └── test-api.js        # API 测试脚本
-├── src/                   # 前端 React 应用
-│   ├── components/        # React 组件
-│   ├── services/          # API 服务
-│   ├── store/             # Zustand 状态管理
-│   ├── types/             # TypeScript 类型
-│   ├── App.tsx            # 主应用组件
-│   └── main.tsx           # 入口文件
-├── .env                   # 前端环境变量
+├── functions/                 # Cloudflare Pages Functions（后端 API）
+│   ├── _lib/
+│   │   ├── auth.ts            # JWT 生成与验证
+│   │   ├── database.ts        # D1 数据库操作
+│   │   ├── helpers.ts         # 响应格式化、请求解析
+│   │   └── types.ts           # 类型定义
+│   └── api/
+│       ├── auth/              # 认证端点（login/register/me）
+│       └── readings/          # 解读 CRUD（index/[id]/search）
+├── src/                       # 前端 React 应用
+│   ├── components/            # React 组件
+│   ├── services/              # API 服务层
+│   ├── store/                 # Zustand 状态管理
+│   ├── types/                 # TypeScript 类型
+│   ├── App.tsx                # 主应用组件
+│   └── main.tsx               # 入口文件
+├── scripts/
+│   └── copy-functions.js      # 构建时复制 functions 到 dist
+├── wrangler.toml              # Cloudflare Pages 配置
 └── package.json
 ```
 
 ## 快速开始
 
-### 1. 启动后端服务
+### 安装依赖
 
 ```bash
-cd api
-npm install          # 安装依赖
-npm run dev          # 启动开发服务器 (http://localhost:3001)
+npm install
 ```
 
-### 2. 启动前端服务
+### 启动开发服务器
 
 ```bash
-cd ..               # 返回根目录
-npm install         # 安装依赖（如果还没有）
-npm run dev         # 启动开发服务器 (http://localhost:5173)
+npm run dev
 ```
 
-### 3. 测试 API
+前端默认运行在 `http://localhost:5173`。
 
-后端启动后，可以运行测试脚本验证 API 功能：
+### 本地开发后端（可选）
+
+如需本地调试 Pages Functions：
 
 ```bash
-cd api
-node test-api.js
+npx wrangler pages dev dist --binding DB:DB
 ```
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+构建产物输出到 `dist/`，同时复制 `functions/` 到 `dist/functions/`。
+
+### 部署到 Cloudflare Pages
+
+```bash
+npm run deploy
+```
+
+或通过 GitHub 仓库连接 Cloudflare Pages 实现自动部署。
 
 ## 技术栈
 
 ### 后端
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js 4
-- **Language**: TypeScript 5
-- **Database**: PostgreSQL
-- **Auth**: JWT + bcryptjs
-- **Validation**: express-validator
+- **Runtime**: Cloudflare Pages Functions
+- **Database**: Cloudflare D1 (SQLite)
+- **Auth**: JWT (jose) + bcryptjs
+- **兼容性**: nodejs_compat
 
 ### 前端
 - **Framework**: React 18
@@ -77,49 +83,52 @@ node test-api.js
 - **Styling**: Tailwind CSS 3
 - **Animation**: Framer Motion 10
 - **State**: Zustand
-- **HTTP**: Axios
 
 ## API 端点
 
-### 认证相关
+所有端点前缀为 `/api`，由 Pages Functions 提供。
+
+### 认证
 
 | 端点 | 方法 | 描述 |
 |------|------|------|
-| `/api/auth/register` | POST | 用户注册 |
 | `/api/auth/login` | POST | 用户登录 |
+| `/api/auth/register` | POST | 用户注册 |
 | `/api/auth/me` | GET | 获取当前用户信息 |
 
-### 解读历史相关
+### 解读历史
 
 | 端点 | 方法 | 描述 |
 |------|------|------|
-| `/api/readings` | GET | 获取解读历史列表 |
+| `/api/readings` | GET | 分页获取解读列表 |
 | `/api/readings` | POST | 保存新解读 |
 | `/api/readings/:id` | GET | 获取解读详情 |
 | `/api/readings/:id` | DELETE | 删除解读 |
+| `/api/readings/search` | GET | 搜索解读 |
 
 ## 环境变量
-
-### 后端 (.env)
-
-```bash
-PORT=3001
-NODE_ENV=development
-JWT_SECRET=your_secret_key
-CORS_ORIGIN=http://localhost:5173
-DATABASE_URL=postgresql://user:password@localhost:5432/database_name
-```
 
 ### 前端 (.env)
 
 ```bash
-VITE_API_URL=http://localhost:3001
-VITE_API_KEY=your_api_key
+# 可选：指定后端 API 地址，不设置时使用相对路径 /api
+# VITE_API_URL=https://tarot-yue.cn
+
+# 解读服务密钥
+VITE_API_KEY=your_deepseek_api_key
 ```
+
+### Cloudflare Pages 项目设置
+
+在 Cloudflare Pages 项目的 Settings → Environment variables 中配置：
+- `VITE_API_KEY`: DeepSeek API 密钥
+
+Bindings 中配置：
+- D1 database: `DB` → `tarot-db`
 
 ## 数据库
 
-应用使用 PostgreSQL 数据库。
+使用 Cloudflare D1（基于 SQLite）。
 
 ### 数据表
 
@@ -127,65 +136,19 @@ VITE_API_KEY=your_api_key
 - id (INTEGER, 主键)
 - username (TEXT, 唯一)
 - password (TEXT, bcrypt 加密)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
+- created_at, updated_at (TEXT)
 
 **readings 表**
 - id (INTEGER, 主键)
 - user_id (INTEGER, 外键)
-- cards (JSON)
+- cards (TEXT, JSON)
 - interpretation (TEXT)
-- user_context (TEXT)
-- order_id (TEXT)
-- title (TEXT)
-- customer_gender (TEXT)
-- related_order_id (TEXT)
-- customer_info (TEXT)
-- customer_statement (TEXT)
-- customer_question (TEXT)
-- created_at (TIMESTAMP)
+- user_context, order_id, title (TEXT)
+- customer_gender, related_order_id (TEXT, 可空)
+- customer_info, customer_statement, customer_question (TEXT, 可空)
+- created_at (TEXT)
 
-## 生产部署
-
-### 推荐部署平台
-
-- **前端**: Cloudflare Pages
-- **后端**: Railway (https://railway.app)
-- **域名**: Cloudflare
-
-### 部署步骤
-
-1. **前端部署到 Cloudflare Pages**
-   - 构建前端：`npm run build`
-   - 部署：`npm run deploy`
-   - 配置自定义域名
-
-2. **后端部署到 Railway**
-   - 连接 GitHub 仓库
-   - 添加 PostgreSQL 插件
-   - 配置环境变量
-
-3. **DNS 配置**
-   - 在 Cloudflare 配置 DNS 记录
-
-## 开发指南
-
-### 代码规范
-
-- 使用 TypeScript 类型标注
-- 组件文件不超过 200 行
-- 遵循 ESLint + Prettier 配置
-
-### Git 提交规范
-
-```
-feat: 新功能
-fix: 修复 bug
-docs: 文档更新
-style: 代码格式
-refactor: 重构
-test: 测试
-```
+数据库表在首次请求时自动创建（见 `functions/_lib/database.ts` 的 `ensureDatabase`），同时自动创建默认管理员账号 `yue / 123456`。
 
 ## 许可证
 

@@ -58,7 +58,8 @@ function App() {
     try {
       const reading = await getInterpretation(input);
       setInterpretation(reading);
-      await handleSaveReading();
+      // 直接传入 reading，避免 React setState 异步导致闭包中 interpretation 仍为旧值
+      await handleSaveReading(undefined, reading);
     } catch (error) {
       console.error('Failed to get interpretation:', error);
       setInterpretation('抱歉，解读暂时无法获取，请稍后再试。');
@@ -67,12 +68,13 @@ function App() {
     }
   };
 
-  const handleSaveReading = async (uploadedImage?: string) => {
+  const handleSaveReading = async (uploadedImage?: string, interpretationOverride?: string) => {
+    const finalInterpretation = interpretationOverride ?? interpretation;
     const record: ReadingRecord = {
       id: Date.now().toString(),
       spread,
       selectedCards,
-      interpretation,
+      interpretation: finalInterpretation,
       userContext: currentUserContext,
       uploadedImage,
       createdAt: new Date().toISOString(),
@@ -84,26 +86,28 @@ function App() {
       customerStatement,
       customerQuestion,
     };
-    console.log('Saving reading record:', {
-      hasCards: selectedCards.length > 0,
-      hasInterpretation: interpretation.length > 0,
-      hasOrderId: orderId.length > 0,
-      isAuthenticated,
-      recordLength: JSON.stringify(record).length,
-    });
 
     saveReadingRecord(record);
-    console.log('Reading record saved to localStorage');
 
     if (isAuthenticated) {
       try {
-        const result = await createReadingRecord(selectedCards, interpretation, currentUserContext, spread, orderId, title, customerGender, relatedOrderId, customerInfo, customerStatement, customerQuestion);
-        console.log('Reading record saved to backend:', result);
+        await createReadingRecord(
+          selectedCards,
+          finalInterpretation,
+          currentUserContext,
+          spread,
+          orderId,
+          title,
+          customerGender,
+          relatedOrderId,
+          customerInfo,
+          customerStatement,
+          customerQuestion
+        );
+        setRefreshHistory(prev => !prev);
       } catch (error) {
         console.error('Failed to save reading to backend:', error);
       }
-    } else {
-      console.log('Not authenticated, skipping backend save');
     }
   };
 

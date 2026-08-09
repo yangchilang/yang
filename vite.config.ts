@@ -8,14 +8,6 @@ export default defineConfig({
       '@': '/src',
     },
   },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
-  },
   build: {
     outDir: 'dist',
     sourcemap: false,
