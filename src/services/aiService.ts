@@ -369,3 +369,21 @@ function generateFallbackInterpretation(input: ReadingInput): string {
   
   return reading;
 }
+
+export function cleanInterpretationForImage(interpretation: string, spreadName?: string): string {
+  const lines = interpretation.split(/\r?\n/);
+  const filtered = lines.filter(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return true;
+    if (/^第[一二三四五六七八九十百千\d]+张牌：/.test(trimmed)) return false;
+    if (trimmed === '整体解读') return false;
+    if (trimmed === '温馨提示') return false;
+    if (spreadName && trimmed === spreadName.trim()) return false;
+    return true;
+  });
+  let start = 0;
+  while (start < filtered.length && !filtered[start].trim()) start++;
+  let end = filtered.length;
+  while (end > start && !filtered[end - 1].trim()) end--;
+  return filtered.slice(start, end).join('\n');
+}

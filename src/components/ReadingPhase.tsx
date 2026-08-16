@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import { SelectedCard, Spread } from '../types';
+import { cleanInterpretationForImage } from '../services/aiService';
 
 interface ReadingPhaseProps {
   selectedCards: SelectedCard[];
@@ -361,20 +362,17 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
       >
         <div style={{ background: '#fcfbf7', padding: '48px 36px 40px', fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", "Georgia", serif' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ fontSize: '22px', color: '#2c2c2c', marginBottom: '8px', fontWeight: 500, letterSpacing: '1px' }}>
+            <div style={{ fontSize: '22px', color: '#2c2c2c', fontWeight: 500, letterSpacing: '1px' }}>
               {spread?.name || '塔罗解读'}
-            </div>
-            <div style={{ fontSize: '13px', color: '#b0b0b0' }}>
-              {new Date().toLocaleDateString('zh-CN')}
             </div>
           </div>
           <div style={{ width: '32px', height: '2px', background: '#d4af37', margin: '0 auto 28px' }} />
           <div style={{ fontSize: '16px', lineHeight: '1.9', color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.3px' }}>
-            {interpretation}
+            {cleanInterpretationForImage(interpretation, spread?.name)}
           </div>
           <div style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
-            <div style={{ fontSize: '12px', color: '#cccccc', letterSpacing: '0.5px' }}>
-              塔罗解读 · 愿你带着清晰与勇气前行
+            <div style={{ fontSize: '11px', color: '#999999', letterSpacing: '0.3px', lineHeight: '1.7' }}>
+              塔罗只是一面镜子，帮你看清当下的能量与倾向，真正需要书写答案的依然是你自己。愿你带着清晰与勇气，一步一步走向自己真正想要的方向。
             </div>
           </div>
         </div>
