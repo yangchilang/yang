@@ -12,14 +12,15 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const readingRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   const handleGenerateImage = async () => {
-    if (!readingRef.current) return;
+    if (!exportRef.current) return;
     
     setIsGenerating(true);
     
     try {
-      const canvas = await html2canvas(readingRef.current, {
+      const canvas = await html2canvas(exportRef.current, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
@@ -300,6 +301,32 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
           />
         </motion.div>
       )}
+
+      {/* 长图导出模板 - 仅解读文字，备忘录风格 */}
+      <div
+        ref={exportRef}
+        style={{ position: 'absolute', left: '-9999px', top: 0, width: '600px' }}
+      >
+        <div style={{ background: '#fcfbf7', padding: '48px 36px 40px', fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", "Georgia", serif' }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ fontSize: '22px', color: '#2c2c2c', marginBottom: '8px', fontWeight: 500, letterSpacing: '1px' }}>
+              {record.spread?.name || '塔罗解读'}
+            </div>
+            <div style={{ fontSize: '13px', color: '#b0b0b0' }}>
+              {formatDate(record.createdAt)}
+            </div>
+          </div>
+          <div style={{ width: '32px', height: '2px', background: '#d4af37', margin: '0 auto 28px' }} />
+          <div style={{ fontSize: '16px', lineHeight: '1.9', color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.3px' }}>
+            {record.interpretation}
+          </div>
+          <div style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
+            <div style={{ fontSize: '12px', color: '#cccccc', letterSpacing: '0.5px' }}>
+              塔罗解读 · 愿你带着清晰与勇气前行
+            </div>
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 }
