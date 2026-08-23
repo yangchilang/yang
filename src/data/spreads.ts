@@ -7,6 +7,7 @@ export interface Spread {
   id: string;
   name: string;
   description: string;
+  defaultQuestion?: string;
   category: string;
   positions: SpreadPosition[];
 }
@@ -16,6 +17,7 @@ export const spreads: Spread[] = [
     id: 'three-card-reunion',
     name: '是否能复合',
     description: '分析与对方的复合可能性',
+    defaultQuestion: '我和他还能不能复合，他想不想复合。请较为明确地回答"能否复合"的问题，不要给出太模棱两可的答案。',
     category: '感情复合',
     positions: [
       { position: 1, meaning: '和对方还能不能复合' },
@@ -27,6 +29,7 @@ export const spreads: Spread[] = [
     id: 'three-card-feelings',
     name: 'ta的想法和感觉',
     description: '了解对方的真实想法和感受',
+    defaultQuestion: '在TA心里我是什么样子的、TA对我的感情是怎样的',
     category: '想法分析',
     positions: [
       { position: 1, meaning: 'ta的想法' },
@@ -38,6 +41,7 @@ export const spreads: Spread[] = [
     id: 'three-card-soulmate',
     name: '正缘',
     description: '探索未来正缘的特征',
+    defaultQuestion: '第一张牌我未来的正缘的性格，第二张牌我的正缘的外貌和身高信息，注意性取向部分，如果是喜欢男性需要分析男性特征，如果喜欢女性需要分析女性特征，如果是同性需要根据占卜者的性别进行同性的分析！分析时请尽量具体，如：肤色偏白、身高175左右、瓜子脸之类 第三张牌我的正缘的工作情况和职业类型，分析时即使目前看起来这方面信息不明显，也要给出具体的专业或行业范围，如：金融行业、计算机专业等',
     category: '感情发展',
     positions: [
       { position: 1, meaning: '未来正缘的性格' },
@@ -49,6 +53,7 @@ export const spreads: Spread[] = [
     id: 'three-card-monthly',
     name: '月发展趋势',
     description: '预测本月的发展走向',
+    defaultQuestion: '我的xx运的一个月情况分析',
     category: '时间发展',
     positions: [
       { position: 1, meaning: '月初状态' },
@@ -60,6 +65,7 @@ export const spreads: Spread[] = [
     id: 'three-card-fortune',
     name: '运势近中远',
     description: '分析近期、中期和远期运势',
+    defaultQuestion: '结合各张牌的位置含义：近期运势、中期运势、远期运势。',
     category: '事业财运',
     positions: [
       { position: 1, meaning: '近期运势' },
@@ -71,6 +77,7 @@ export const spreads: Spread[] = [
     id: 'three-card-wealth',
     name: '财运改善',
     description: '改善财务状况的建议',
+    defaultQuestion: '改善财务状况需要注意的地方、如何改善财务状况 / 提升正财或偏财、未来的财务状况需要注意或如何做。',
     category: '事业财运',
     positions: [
       { position: 1, meaning: '改善财务状况需要注意的地方' },
@@ -82,6 +89,7 @@ export const spreads: Spread[] = [
     id: 'three-card-dating',
     name: '脱单',
     description: '分析近期脱单的可能性',
+    defaultQuestion: '看最近脱单的情况，注意明确给出会或者不会',
     category: '感情发展',
     positions: [
       { position: 1, meaning: '最近的感情状态' },
@@ -94,6 +102,7 @@ export const spreads: Spread[] = [
     id: 'complex-cross',
     name: '复合十字架',
     description: '用于分析复合可能性和建议',
+    defaultQuestion: '我们还能不能复合？需要怎么做？',
     category: '感情复合',
     positions: [
       { position: 1, meaning: '你们会不会复合' },
@@ -107,6 +116,7 @@ export const spreads: Spread[] = [
     id: 'broken-mirror',
     name: '破镜重圆牌阵',
     description: '深度分析复合可能性及情敌情况',
+    defaultQuestion: '我们还有复合的可能吗？前任和情敌的情况如何？',
     category: '感情复合',
     positions: [
       { position: 1, meaning: '最近及过去' },
@@ -126,6 +136,7 @@ export const spreads: Spread[] = [
     id: 'ex-reunion',
     name: '前任复合判断',
     description: '全面分析前任复合的可能性',
+    defaultQuestion: '我和前任还能复合吗？',
     category: '感情复合',
     positions: [
       { position: 1, meaning: '描述你们之前的感情' },
@@ -143,6 +154,7 @@ export const spreads: Spread[] = [
     id: 'stalking-ex',
     name: '视奸前任牌阵',
     description: '了解前任的近况',
+    defaultQuestion: '前任目前的情况如何？',
     category: '感情复合',
     positions: [
       { position: 1, meaning: '对方目前感情状况' },
@@ -156,6 +168,7 @@ export const spreads: Spread[] = [
     id: 'ex-reunion-advanced',
     name: '前任复合判断（进阶版）',
     description: '更深入的前任复合分析',
+    defaultQuestion: '我和前任还能复合吗？请深度分析',
     category: '感情复合',
     positions: [
       { position: 1, meaning: '你们之前的感情' },
@@ -173,6 +186,7 @@ export const spreads: Spread[] = [
     id: 'active-reunion',
     name: '主动复合牌阵',
     description: '指导如何主动寻求复合',
+    defaultQuestion: '我应该如何主动跟前任复合？',
     category: '感情复合',
     positions: [
       { position: 1, meaning: 'ta还爱我吗' },
@@ -192,6 +206,7 @@ export const spreads: Spread[] = [
     id: 'study-hexagram',
     name: '学业六芒星',
     description: '全面分析学业状况',
+    defaultQuestion: '我的学业状况如何？',
     category: '学业',
     positions: [
       { position: 1, meaning: '过去' },
@@ -207,6 +222,7 @@ export const spreads: Spread[] = [
     id: 'new-semester',
     name: '新学期牌阵',
     description: '预测新学期的发展',
+    defaultQuestion: '新学期的发展如何？',
     category: '学业',
     positions: [
       { position: 1, meaning: '一学期人际发展趋势（前期）' },
@@ -223,6 +239,7 @@ export const spreads: Spread[] = [
     id: 'study-problem',
     name: '学习问题解决牌阵',
     description: '解决学习中的问题',
+    defaultQuestion: '我应该如何解决学习中的问题？',
     category: '学业',
     positions: [
       { position: 1, meaning: '问题核心' },
@@ -235,6 +252,7 @@ export const spreads: Spread[] = [
     id: 'study-status',
     name: '学习状态及建议',
     description: '了解当前学习状态',
+    defaultQuestion: '我当前的学习状态如何？有什么建议？',
     category: '学业',
     positions: [
       { position: 1, meaning: '建议' },
@@ -247,6 +265,7 @@ export const spreads: Spread[] = [
     id: 'exam-prep',
     name: '备考牌阵',
     description: '备考期间的全面分析',
+    defaultQuestion: '我备考的情况如何？',
     category: '学业',
     positions: [
       { position: 1, meaning: '备考中的个人状态（需要加强或改进的地方）' },
@@ -263,6 +282,7 @@ export const spreads: Spread[] = [
     id: 'ambiguous',
     name: '暧昧牌阵',
     description: '分析暧昧关系的发展',
+    defaultQuestion: '我和ta的暧昧关系会如何发展？',
     category: '感情发展',
     positions: [
       { position: 1, meaning: 'ta的暧昧对象是否只有我' },
@@ -276,6 +296,7 @@ export const spreads: Spread[] = [
     id: 'secret-love',
     name: '暗恋牌阵',
     description: '了解暗恋对象的想法',
+    defaultQuestion: 'ta对我的真实想法是什么？我们在一起的可能性如何？',
     category: '感情发展',
     positions: [
       { position: 1, meaning: 'ta对我的真实想法' },
@@ -290,6 +311,7 @@ export const spreads: Spread[] = [
     id: 'crush',
     name: '暗恋crush牌阵',
     description: '简单的暗恋分析',
+    defaultQuestion: 'ta对我有没有好感？我们会在一起吗？',
     category: '感情发展',
     positions: [
       { position: 1, meaning: 'ta对我有没有好感' },
@@ -302,6 +324,7 @@ export const spreads: Spread[] = [
     id: 'new-love',
     name: '新恋情预测',
     description: '预测即将到来的恋情',
+    defaultQuestion: '我近期会有新恋情吗？',
     category: '感情发展',
     positions: [
       { position: 1, meaning: '马上会有一段新恋情吗' },
@@ -316,6 +339,7 @@ export const spreads: Spread[] = [
     id: 'future-lover',
     name: '未来恋人牌阵',
     description: '描绘未来恋人的特征',
+    defaultQuestion: '我未来的恋人是什么样的？',
     category: '感情发展',
     positions: [
       { position: 1, meaning: 'ta是什么类型' },
@@ -330,6 +354,7 @@ export const spreads: Spread[] = [
     id: 'peach-blossom',
     name: '桃花牌阵',
     description: '分析近期的桃花运势',
+    defaultQuestion: '我近期的桃花运势如何？',
     category: '感情发展',
     positions: [
       { position: 1, meaning: '三个月内的桃花状况' },
@@ -344,6 +369,7 @@ export const spreads: Spread[] = [
     id: 'peach-blossoms',
     name: '桃花朵朵开牌阵',
     description: '详细的桃花分析',
+    defaultQuestion: '我近期的桃花运势如何？请详细分析',
     category: '感情发展',
     positions: [
       { position: 1, meaning: '自身对情感的需求' },
@@ -364,6 +390,7 @@ export const spreads: Spread[] = [
     id: 'multi-dimension',
     name: '多维度想法感觉',
     description: '从多个维度分析对方想法',
+    defaultQuestion: 'ta对我的想法和感觉是什么？请多维度分析',
     category: '想法分析',
     positions: [
       { position: 1, meaning: '表层想法' },
@@ -377,6 +404,7 @@ export const spreads: Spread[] = [
     id: 'thought-development',
     name: '想法和发展牌阵',
     description: '分析对方想法和未来发展',
+    defaultQuestion: 'ta对我的想法是什么？未来发展如何？',
     category: '想法分析',
     positions: [
       { position: 1, meaning: '对方的想法（表层）' },
@@ -391,6 +419,7 @@ export const spreads: Spread[] = [
     id: 'peek-heart',
     name: '窥探内心牌阵',
     description: '深入了解对方内心',
+    defaultQuestion: 'ta的内心是怎么想的？',
     category: '想法分析',
     positions: [
       { position: 1, meaning: '对方想从你身上得到什么' },
@@ -404,6 +433,7 @@ export const spreads: Spread[] = [
     id: 'missing',
     name: '思念牌阵',
     description: '了解对方是否在想你',
+    defaultQuestion: 'ta在想我吗？',
     category: '想法分析',
     positions: [
       { position: 1, meaning: 'ta在想我吗' },
@@ -420,6 +450,7 @@ export const spreads: Spread[] = [
     id: 'venus',
     name: '维纳斯牌阵',
     description: '全面分析双方关系',
+    defaultQuestion: '我和ta的关系如何？',
     category: '关系分析',
     positions: [
       { position: 1, meaning: '自己的看法' },
@@ -436,6 +467,7 @@ export const spreads: Spread[] = [
     id: 'heart-voice',
     name: '心之声牌阵',
     description: '倾听内心的声音',
+    defaultQuestion: '我和ta的内心想法和关系如何？',
     category: '关系分析',
     positions: [
       { position: 1, meaning: '当前感情现状' },
@@ -452,6 +484,7 @@ export const spreads: Spread[] = [
     id: 'break-up',
     name: '断舍离牌阵',
     description: '决定是否应该放弃',
+    defaultQuestion: '我应该放弃这段感情吗？',
     category: '关系分析',
     positions: [
       { position: 1, meaning: '对方目前对我的想法' },
@@ -465,6 +498,7 @@ export const spreads: Spread[] = [
     id: 'destiny-wheel',
     name: '命运之轮牌阵',
     description: '探索命运的安排',
+    defaultQuestion: '我和ta是命中注定吗？',
     category: '关系分析',
     positions: [
       { position: 1, meaning: '我和ta是命中注定吗' },
@@ -479,6 +513,7 @@ export const spreads: Spread[] = [
     id: 'sincerity',
     name: '是否真心牌阵',
     description: '检验对方的真心',
+    defaultQuestion: 'ta对我是不是真心？',
     category: '关系分析',
     positions: [
       { position: 1, meaning: 'ta对你是否真心' },
@@ -495,6 +530,7 @@ export const spreads: Spread[] = [
     id: 'cheating',
     name: '检验出轨牌阵',
     description: '检验是否有出轨',
+    defaultQuestion: 'ta是否有出轨？',
     category: '关系分析',
     positions: [
       { position: 1, meaning: 'ta内心对这段感情是否动摇' },
@@ -510,6 +546,7 @@ export const spreads: Spread[] = [
     id: 'career',
     name: '事业发展前景',
     description: '分析事业发展方向',
+    defaultQuestion: '我的事业发展前景如何？',
     category: '事业财运',
     positions: [
       { position: 1, meaning: '选择这份工作的原因' },
@@ -523,6 +560,7 @@ export const spreads: Spread[] = [
     id: 'wealth',
     name: '财运改善牌阵',
     description: '改善财务状况',
+    defaultQuestion: '我应该如何改善财务状况？',
     category: '事业财运',
     positions: [
       { position: 1, meaning: '改善财务状况需要注意的地方' },
@@ -536,6 +574,7 @@ export const spreads: Spread[] = [
     id: 'friendship',
     name: '友情能量扫描牌阵',
     description: '扫描人际关系能量',
+    defaultQuestion: '我的人际关系能量如何？',
     category: '人际关系',
     positions: [
       { position: 1, meaning: '你在人际关系中的整体能量与角色' },
@@ -553,6 +592,7 @@ export const spreads: Spread[] = [
     id: 'development',
     name: '发展牌阵（事件推理）',
     description: '推理事件的发展',
+    defaultQuestion: '事件会如何发展？',
     category: '时间发展',
     positions: [
       { position: 1, meaning: '事件开端' },
@@ -566,6 +606,7 @@ export const spreads: Spread[] = [
     id: 'time-year',
     name: '时间发展牌阵（一年）',
     description: '预测一年的发展',
+    defaultQuestion: '未来一年的发展如何？',
     category: '时间发展',
     positions: [
       { position: 1, meaning: '第一个月的发展' },
@@ -586,6 +627,7 @@ export const spreads: Spread[] = [
     id: 'time-half-year',
     name: '时间发展牌阵（半年）',
     description: '预测半年的发展',
+    defaultQuestion: '未来半年的发展如何？',
     category: '时间发展',
     positions: [
       { position: 1, meaning: '第一个月的发展' },
@@ -600,6 +642,7 @@ export const spreads: Spread[] = [
     id: 'time-three-months',
     name: '时间发展牌阵（三个月）',
     description: '预测三个月的发展',
+    defaultQuestion: '未来三个月的发展如何？',
     category: '时间发展',
     positions: [
       { position: 1, meaning: '第一个月的发展' },

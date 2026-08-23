@@ -25,6 +25,7 @@ export interface Spread {
   id: string;
   name: string;
   description: string;
+  defaultQuestion?: string;
   category: string;
   positions: SpreadPosition[];
 }

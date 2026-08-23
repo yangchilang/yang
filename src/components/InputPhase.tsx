@@ -46,6 +46,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
     });
     setCardInputValues(initialInputValues);
     setTitle(spread.name);
+    setCustomerQuestion(spread.defaultQuestion || '');
     setStep('combined');
   };
 
