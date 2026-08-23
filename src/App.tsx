@@ -58,8 +58,8 @@ function App() {
     try {
       const reading = await getInterpretation(input);
       setInterpretation(reading);
-      // 直接传入 reading，避免 React setState 异步导致闭包中 interpretation 仍为旧值
-      await handleSaveReading(undefined, reading);
+      // 传入 input 避免 React setState 异步导致闭包中状态仍为旧值
+      await handleSaveReading(undefined, reading, input);
     } catch (error) {
       console.error('Failed to get interpretation:', error);
       setInterpretation('抱歉，解读暂时无法获取，请稍后再试。');
@@ -68,23 +68,33 @@ function App() {
     }
   };
 
-  const handleSaveReading = async (uploadedImage?: string, interpretationOverride?: string) => {
+  const handleSaveReading = async (uploadedImage?: string, interpretationOverride?: string, input?: ReadingInput) => {
     const finalInterpretation = interpretationOverride ?? interpretation;
+    const finalSpread = input?.spread ?? spread;
+    const finalSelectedCards = input?.selectedCards ?? selectedCards;
+    const finalOrderId = input?.orderId ?? orderId;
+    const finalTitle = input?.title ?? title;
+    const finalCustomerGender = input?.customerGender ?? customerGender;
+    const finalRelatedOrderId = input?.relatedOrderId ?? relatedOrderId;
+    const finalCustomerInfo = input?.customerInfo ?? customerInfo;
+    const finalCustomerStatement = input?.customerStatement ?? customerStatement;
+    const finalCustomerQuestion = input?.customerQuestion ?? customerQuestion;
+
     const record: ReadingRecord = {
       id: Date.now().toString(),
-      spread,
-      selectedCards,
+      spread: finalSpread,
+      selectedCards: finalSelectedCards,
       interpretation: finalInterpretation,
       userContext: currentUserContext,
       uploadedImage,
       createdAt: new Date().toISOString(),
-      orderId,
-      title,
-      customerGender,
-      relatedOrderId,
-      customerInfo,
-      customerStatement,
-      customerQuestion,
+      orderId: finalOrderId,
+      title: finalTitle,
+      customerGender: finalCustomerGender,
+      relatedOrderId: finalRelatedOrderId,
+      customerInfo: finalCustomerInfo,
+      customerStatement: finalCustomerStatement,
+      customerQuestion: finalCustomerQuestion,
     };
 
     saveReadingRecord(record);
@@ -92,17 +102,17 @@ function App() {
     if (isAuthenticated) {
       try {
         await createReadingRecord(
-          selectedCards,
+          finalSelectedCards,
           finalInterpretation,
           currentUserContext,
-          spread,
-          orderId,
-          title,
-          customerGender,
-          relatedOrderId,
-          customerInfo,
-          customerStatement,
-          customerQuestion
+          finalSpread,
+          finalOrderId,
+          finalTitle,
+          finalCustomerGender,
+          finalRelatedOrderId,
+          finalCustomerInfo,
+          finalCustomerStatement,
+          finalCustomerQuestion
         );
         setRefreshHistory(prev => !prev);
       } catch (error) {
