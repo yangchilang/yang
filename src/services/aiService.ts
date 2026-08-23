@@ -1,7 +1,18 @@
 import { ReadingInput } from '../types';
 
-const API_KEY = import.meta.env.VITE_API_KEY || 'sk-bc0642954c244f0996f2c2e7122c335c';
-const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+// 密钥安全：源码中绝对不硬编码任何真实 API Key。
+// 部署到 Cloudflare Pages 时，前端请求同源后端 /api/interpret，由 Pages Functions 在服务端注入密钥并转发。
+// 本地开发时，如果在 .env.local 里配置了 VITE_API_KEY（仅开发者本机可见，不进仓库），可以直接直连 DeepSeek 跳过代理，方便调试。
+const INTERPRET_ENDPOINT = '/api/interpret';
+const MODEL_NAME = import.meta.env.VITE_MODEL_NAME || 'deepseek-v4-flash';
+
+// 只允许"构建时被用户显式通过环境变量注入"的 Key，源码里没有任何默认值。
+// 部署环境不设置这个变量，就走后端安全代理。
+const DEV_MODE_DIRECT_API_KEY: string | undefined = (import.meta.env.VITE_API_KEY || '').trim() || undefined;
+const DEV_MODE_DIRECT_API_URL =
+  (import.meta.env.VITE_API_URL || '').trim() || 'https://api.deepseek.com/v1/chat/completions';
+
+const USE_DIRECT = Boolean(DEV_MODE_DIRECT_API_KEY);
 
 function buildPrompt(input: ReadingInput): string {
   const { selectedCards, spread, customerGender, customerInfo, customerStatement, customerQuestion } = input;
@@ -39,17 +50,18 @@ function buildPrompt(input: ReadingInput): string {
   const allContext = [genderInfo, customerInfoSection, statementInfo, questionInfo].filter(Boolean).join('\n');
 
   return `你是一位具有多年实际咨询经验的专业塔罗师。你的任务是根据客户自述、客户问题、牌阵名称、每个牌位的含义以及对应牌面，生成适合直接私信客户或展示在网页上的塔罗解读。
- 
- 牌阵中的牌数不固定，可能是1张、3张、5张、7张或更多张。你必须严格按照输入的牌位顺序逐张解读，不能默认只有三张牌，也不能擅自增加、删除或调换牌位。 
- 
- 【核心目标】 
- 
- 1. 每张牌先做简短、准确的专业牌义解释。 
- 2. 再结合这张牌所处的牌位以及客户的现实情况展开。 
- 3. 解读必须像真人塔罗师在私信中慢慢讲述，而不是格式化的分析报告。 
- 4. 既要体现塔罗专业性，也要回应客户真正关心的问题。 
- 5. 不做绝对预言，不把牌面说成已经确定的现实。 
- 6. 不机械套用固定答案，同一张牌处在不同牌位时，解释方向必须有所区别。 
+
+ 牌阵中的牌数不固定，可能是1张、3张、5张、7张或更多张。你必须严格按照输入的牌位顺序逐张解读，不能默认只有三张牌，也不能擅自增加、删除或调换牌位。
+
+ 【核心目标】
+
+ 1. 每张牌先做简短、准确的专业牌义解释。
+ 2. 再结合这张牌所处的牌位以及客户的现实情况展开，必须引用客户自述中的具体细节（如认识时间、联系频率、见面情况、矛盾点等），不允许脱离客户实际情况空谈牌义。
+ 3. 解读必须像真人塔罗师在私信中慢慢讲述，亲切自然，而不是格式化的分析报告。
+ 4. 既要体现塔罗专业性，也要回应客户真正关心的问题，并且给出具体的、可观察的判断方向。
+ 5. 不做绝对预言，不把牌面说成已经确定的现实。
+ 6. 不机械套用固定答案，同一张牌处在不同牌位时，解释方向必须有所区别。
+ 7. 内容必须扎实具体，禁止使用"可能有一定倾向""需要观察一下""保持耐心"等空泛表达而不展开说明。
  
  【牌位优先原则】 
  
@@ -108,33 +120,39 @@ function buildPrompt(input: ReadingInput): string {
  
  不要只罗列关键词，也不要把所有可能牌义都塞进正文。 
  
- 【真人私信语言风格】 
- 
- 语言需要： 
- 
- - 专业但不生硬 
- - 自然、口语化 
- - 有情绪流动和停顿感 
- - 像真人根据客户情况慢慢解释 
- - 有明确判断，但不把话说死 
- - 能指出客户容易忽略的细节 
- - 不刻意制造玄乎感 
- - 不过度安慰客户 
- - 不迎合客户预设的答案 
- 
- 可以自然使用： 
- 
- "我会觉得……" 
- "这里其实有一点很明显……" 
- "放在这个牌位上，它更像是在说……" 
- "再结合你提到的情况来看……" 
- "这不一定代表他完全没有想法……" 
- "但这个地方还是需要留意……" 
- "真正需要观察的反而是……" 
- "我不会直接把它理解成……" 
- "说实话，目前还没有到可以完全确定的程度……" 
- 
- 这些句式只能作为语气参考，不要在每次解读中机械重复。 
+ 【真人私信语言风格】
+
+ 解读一开始可以称呼客户为"你"或"朋友"，整篇都保持像在跟一个真实的人面对面聊天的语气，而不是在写报告。
+
+ 语言需要：
+
+ - 专业但不生硬
+ - 自然、口语化、亲切温和
+ - 有情绪流动和停顿感
+ - 像真人根据客户情况慢慢解释，能让客户感到被理解
+ - 有明确判断，但不把话说死
+ - 能指出客户容易忽略的细节
+ - 不刻意制造玄乎感
+ - 不过度安慰客户，但也不冷漠
+ - 不迎合客户预设的答案，但表达要让人愿意接受
+ - 能共情客户的处境，先接住情绪再展开分析
+
+ 可以自然使用：
+
+ "朋友，我看到了……"
+ "你提到的这一点其实很重要……"
+ "我会觉得……"
+ "这里其实有一点很明显……"
+ "放在这个牌位上，它更像是在说……"
+ "再结合你提到的情况来看……"
+ "这不一定代表他完全没有想法……"
+ "但这个地方还是需要留意……"
+ "真正需要观察的反而是……"
+ "我不会直接把它理解成……"
+ "说实话，目前还没有到可以完全确定的程度……"
+ "你愿意把这件事讲出来，说明你已经在认真面对了……"
+
+ 这些句式只能作为语气参考，不要在每次解读中机械重复。
  
  【避免机械腔】 
  
@@ -222,34 +240,36 @@ function buildPrompt(input: ReadingInput): string {
  
  先简短解释专业牌义，再结合这个牌位和客户实际情况自然展开。 
  
- 正文不使用项目符号，不拆成"牌义""现实分析"等小标题，要写成一段连贯的真人解读。 
- 
- 每张牌建议控制在200至400个汉字。牌位越重要，可以适当增加内容，但不要故意凑字数。 
- 
- 全部牌位完成后输出： 
- 
- 整体解读 
- 
- 把所有牌面和牌位串联起来，直接回应客户的问题。不能只是重复前文，要讲清楚整组牌形成的关系逻辑、主要机会、现实阻碍以及可能的发展方向。 
- 
- 整体解读建议控制在400至800个汉字。牌数较少时可以适当缩短，牌数较多时可以适当增加。 
- 
- 最后输出： 
- 
- 温馨提示 
- 
- 结合牌面给出一段具体、现实、可以执行的建议。不要只写"顺其自然""相信自己""保持耐心"等空泛内容。 
- 
- 需要根据牌面告诉客户： 
- 
- - 应该主动还是暂时观察 
- - 是否需要放慢关系节奏 
- - 应该看对方哪些实际行动 
- - 是否需要设立边界 
- - 是否应减少情绪消耗 
- - 哪些事情暂时不适合做 
- 
- 温馨提示建议控制在100至250个汉字。 
+ 正文不使用项目符号，不拆成"牌义""现实分析"等小标题，要写成一段连贯的真人解读。
+
+ 每张牌的正文长度必须达到200至400个汉字，这是硬性要求，不是参考值。如果某张牌的解读不足200字，说明你对这张牌的展开不够充分，必须继续补充。牌位越重要，可以适当增加内容，但不要故意凑字数。每张牌必须包含：牌义解释、牌位含义结合、客户自述细节引用、与前后牌的联动分析，四者缺一不可，不允许只写一两句就跳过。
+
+ 如果客户自述比较简短，必须基于已有信息合理展开推断，而不是用"具体情况需要更多了解"敷衍。例如客户只说"分手三个月"，可以结合时间长度推断情绪阶段；客户说"对方不回消息"，可以结合行为频率推断态度变化。
+
+ 全部牌位完成后输出：
+
+ 整体解读
+
+ 把所有牌面和牌位串联起来，直接回应客户的问题。不能只是重复前文，要讲清楚整组牌形成的关系逻辑、主要机会、现实阻碍以及可能的发展方向。整体解读必须包含对客户核心问题的明确回应，不能绕开问题。
+
+ 整体解读必须达到400至800个汉字，这是硬性要求。牌数较少时可以适当缩短，但不得低于400字；牌数较多时可以适当增加。
+
+ 最后输出：
+
+ 温馨提示
+
+ 结合牌面给出一段具体、现实、可以执行的建议。不要只写"顺其自然""相信自己""保持耐心"等空泛内容。
+
+ 需要根据牌面告诉客户：
+
+ - 应该主动还是暂时观察
+ - 是否需要放慢关系节奏
+ - 应该看对方哪些实际行动
+ - 是否需要设立边界
+ - 是否应减少情绪消耗
+ - 哪些事情暂时不适合做
+
+ 温馨提示必须达到100至250个汉字，这是硬性要求。
  
  【排版要求】 
  
@@ -261,6 +281,15 @@ function buildPrompt(input: ReadingInput): string {
  不要擅自加入客户没有提到的经历。 
  不要添加具体时间预测，除非牌阵本身设置了时间牌位。 
  不要改变牌阵中原有牌位的含义。
+
+ 【字数自检】
+
+ 输出前请逐段检查字数：
+ - 每张牌的正文是否达到200字以上？不足则补充牌位含义结合和客户细节引用。
+ - 整体解读是否达到400字以上？不足则补充牌面联动分析和具体发展方向。
+ - 温馨提示是否达到100字以上？不足则补充具体可执行的行动建议。
+
+ 如果任何一段不达标，必须重新展开该段，不要用"建议保持耐心""需要观察"等空泛话术凑字数，而是补充具体的、与客户情况相关的分析内容。
 
 【输入信息】
 以下是用户的占卜信息：
@@ -275,99 +304,247 @@ ${allContext}
 现在请严格按照以上风格和规则进行解读。`;
 }
 
-export async function getInterpretation(input: ReadingInput): Promise<string> {
+export interface InterpretationResult {
+  content: string;
+  isFallback: boolean;
+  errorMessage?: string;
+}
+
+export async function getInterpretation(input: ReadingInput): Promise<InterpretationResult> {
   try {
     const prompt = buildPrompt(input);
-    
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        max_tokens: 8192,
-        temperature: 0.8,
-        top_p: 0.95,
-      }),
-    });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+    if (!MODEL_NAME) {
+      throw new Error('未配置模型名，请设置环境变量 VITE_MODEL_NAME（推荐 deepseek-v4-flash）');
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    return content.trim() || generateFallbackInterpretation(input);
+    // 本地开发模式：.env.local 配置了 VITE_API_KEY 时，直接直连 DeepSeek，方便调试。
+    // 生产部署：VITE_API_KEY 不会注入前端构建，因此一定会进入 else 分支走同源后端安全代理。
+    if (USE_DIRECT && DEV_MODE_DIRECT_API_KEY) {
+      console.info(
+        `[解读服务] 本地直连模式（仅开发环境）endpoint=${DEV_MODE_DIRECT_API_URL} ` +
+          `model=${MODEL_NAME} key_len=${DEV_MODE_DIRECT_API_KEY.length}`,
+      );
+      return callDeepSeekDirect(prompt, MODEL_NAME, DEV_MODE_DIRECT_API_URL, DEV_MODE_DIRECT_API_KEY);
+    }
+
+    console.info(`[解读服务] 安全代理模式 endpoint=${INTERPRET_ENDPOINT} model=${MODEL_NAME}`);
+    return callBackendProxy(prompt, MODEL_NAME, INTERPRET_ENDPOINT);
   } catch (error) {
-    console.warn('解读服务调用失败，使用备用解读:', error);
-    return generateFallbackInterpretation(input);
+    console.error('========== 解读服务调用失败 ==========');
+    console.error('时间:', new Date().toLocaleString('zh-CN'));
+    console.error('请求URL:', USE_DIRECT ? DEV_MODE_DIRECT_API_URL : INTERPRET_ENDPOINT);
+    console.error('模型:', MODEL_NAME);
+    console.error('错误详情:', error);
+    if (error instanceof Error) {
+      console.error('错误message:', error.message);
+      console.error('错误stack:', error.stack);
+    }
+    console.error('====================================');
+    const msg = error instanceof Error ? error.message : String(error);
+    return {
+      content: generateFallbackInterpretation(input),
+      isFallback: true,
+      errorMessage: msg,
+    };
   }
 }
 
+async function callBackendProxy(prompt: string, model: string, endpoint: string): Promise<InterpretationResult> {
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, model }),
+  });
+
+  let responseText = '';
+  try {
+    responseText = await response.text();
+  } catch {
+    responseText = '';
+  }
+
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    parsed = null;
+  }
+
+  if (!response.ok) {
+    const errMsg =
+      (parsed && typeof parsed.error === 'string' && parsed.error) ||
+      (parsed && typeof parsed.message === 'string' && parsed.message) ||
+      responseText.slice(0, 500) ||
+      `HTTP ${response.status} ${response.statusText}`;
+    throw new Error(errMsg);
+  }
+
+  if (!parsed || !parsed.success || !parsed.data || typeof parsed.data.content !== 'string' || !parsed.data.content.trim()) {
+    const snippet = responseText.slice(0, 300);
+    throw new Error(`后端返回内容缺失，请稍后重试。原始片段: ${snippet}`);
+  }
+
+  const content = parsed.data.content.trim();
+  const finishReason = parsed.data.finishReason || '';
+  console.info(`[解读服务] 响应完成 endpoint=${endpoint} finish_reason=${finishReason} content_len=${content.length}`);
+  return { content, isFallback: false };
+}
+
+async function callDeepSeekDirect(
+  prompt: string,
+  model: string,
+  apiUrl: string,
+  apiKey: string,
+): Promise<InterpretationResult> {
+  const requestBody: Record<string, unknown> = {
+    model,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 8192,
+    temperature: 0.8,
+    top_p: 0.95,
+    thinking: { type: 'disabled' },
+  };
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`HTTP ${response.status} ${response.statusText}${body ? ' | ' + body.slice(0, 500) : ''}`);
+  }
+
+  const data: any = await response.json();
+  const choice = data?.choices?.[0];
+  const message = choice?.message ?? {};
+  const content = typeof message.content === 'string' ? message.content.trim() : '';
+  const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content.trim() : '';
+  const finishReason = typeof choice?.finish_reason === 'string' ? choice.finish_reason : '';
+  const usage = typeof data?.usage === 'object' ? JSON.stringify(data.usage) : '';
+  console.info(
+    `[解读服务] 直连响应完成 finish_reason=${finishReason} usage=${usage} ` +
+      `content_len=${content.length} reasoning_len=${reasoning.length}`,
+  );
+
+  const finalContent = content || reasoning;
+  if (!finalContent) {
+    throw new Error(`解读服务返回空内容（finish_reason=${finishReason}）`);
+  }
+  return { content: finalContent, isFallback: false };
+}
+
 function generateFallbackInterpretation(input: ReadingInput): string {
-  const { selectedCards } = input;
-  
-  const openings = [
-    '朋友，让我看看你抽到了什么...',
-    '朋友，让我为你解读这些牌...',
-    '朋友，我看到了有趣的牌面组合...',
-    '让我为你揭开这些牌的神秘面纱...'
-  ];
-  
-  const cardInterpretations = selectedCards.map((selectedCard, index) => {
-    const positionNames = ['第一张', '第二张', '第三张', '第四张', '第五张'];
-    const position = positionNames[index] || `第${index + 1}张`;
-    const meaning = selectedCard.isReversed 
-      ? selectedCard.card.reversedMeaning 
-      : selectedCard.card.meaning;
-    
-    const warmInterpretations = [
-      `${position}是${selectedCard.card.nameCn}，${selectedCard.isReversed ? '出现了逆位' : '正位'}${selectedCard.isReversed ? '，这意味着' : '，这张牌在说'}${meaning}。`,
-      `看这张${selectedCard.card.nameCn}，${selectedCard.isReversed ? '逆位的能量' : '正位的能量'}${selectedCard.isReversed ? '在提醒你' : '在告诉你'}${meaning}。`,
-      `哦，${position}是${selectedCard.card.nameCn}！${selectedCard.isReversed ? '逆位哦，' : ''}${meaning}，这很重要！`
-    ];
-    
-    return warmInterpretations[Math.floor(Math.random() * warmInterpretations.length)];
+  const { selectedCards, spread, customerQuestion, customerStatement, customerInfo } = input;
+
+  const spreadName = spread?.name || '塔罗解读';
+
+  let output = '';
+  output += spreadName + '\n\n';
+
+  selectedCards.forEach((selectedCard, index) => {
+    const positionNo = index + 1;
+    const positionMeaning = selectedCard.positionMeaning || `第${positionNo}张牌`;
+    const orientation = selectedCard.isReversed ? '逆位' : '正位';
+    const coreMeaning = (selectedCard.isReversed ? selectedCard.card.reversedMeaning : selectedCard.card.meaning) || '当前牌面反映了事情的潜在能量。';
+    const keywords = selectedCard.card.keywords || [];
+    const element = selectedCard.card.element || '';
+
+    output += `第${positionNo}张牌：${positionMeaning}｜${selectedCard.card.nameCn} ${orientation}\n`;
+
+    let cardText = '';
+    cardText += `朋友，这张${selectedCard.card.nameCn}${selectedCard.isReversed ? '出现了逆位，' : '以正位出现，'}首先从专业牌义来看，`;
+    if (orientation === '正位') {
+      cardText += `它通常象征着${coreMeaning.slice(0, 30)}${coreMeaning.length > 30 ? '……' : ''}`;
+    } else {
+      cardText += `它的正位本来代表${(selectedCard.card.meaning || '').slice(0, 25)}，但逆位时能量会被削弱、阻滞或走向反面，`;
+    }
+    if (element) {
+      cardText += `这张牌的元素是${element}，在解读时需要把元素性质一并纳入。`;
+    }
+    cardText += `放在"${positionMeaning}"这个牌位上，它更像是在回答${positionMeaning}这一维度的问题，`;
+    cardText += `而不是泛泛地谈一张${selectedCard.card.nameCn}是什么意思。`;
+
+    if (customerStatement) {
+      const snippet = customerStatement.length > 50 ? customerStatement.slice(0, 50) + '……' : customerStatement;
+      cardText += `你提到"${snippet}"，把这段经历和这张牌结合起来看的话，`;
+      cardText += `牌面所提示的${coreMeaning.slice(0, 20)}其实已经在你描述的细节里有迹可循了。`;
+    } else if (customerInfo) {
+      const snippet = customerInfo.length > 40 ? customerInfo.slice(0, 40) + '……' : customerInfo;
+      cardText += `结合你提供的背景信息"${snippet}"来看，`;
+      cardText += `这张牌所带出的能量并不是凭空出现的，而是你当前处境的一个缩影。`;
+    } else {
+      cardText += `即便你现在没有提供太多背景细节，这张牌本身也在透露一些可以观察的方向，`;
+      cardText += `比如你当下是否在重复某种模式，或者是否有被自己忽略的情绪。`;
+    }
+
+    if (selectedCards.length > 1) {
+      if (index === 0) {
+        const nextCard = selectedCards[index + 1];
+        cardText += `另外，这张牌作为整组牌的开端，它所定下的基调会直接影响后面${nextCard?.card.nameCn || '的牌'}的展开方向，`;
+        cardText += `你可以把它理解为整件事情的起点或底色。`;
+      } else if (index === selectedCards.length - 1) {
+        const prevCard = selectedCards[index - 1];
+        cardText += `从承接关系来看，这张牌是${prevCard?.card.nameCn || '前面牌面'}所指向的趋势走到最后呈现出的结果，`;
+        cardText += `它不一定代表终局，但往往是我们最需要留意的收尾信号。`;
+      } else {
+        const prevCard = selectedCards[index - 1];
+        const nextCard = selectedCards[index + 1];
+        cardText += `夹在${prevCard?.card.nameCn || '前面的牌'}与${nextCard?.card.nameCn || '后面的牌'}之间，`;
+        cardText += `这张牌既承接了前一张带出的主题，又为后一张的展开埋下了伏笔。`;
+      }
+    }
+
+    if (keywords.length > 0) {
+      cardText += `如果把它落到关键词上，大约可以概括为：${keywords.slice(0, 4).join('、')}。`;
+    }
+    cardText += `但这不是全部，真正需要看的是这些能量会如何在你接下来一段时间里具体表现出来。`;
+
+    output += cardText + '\n\n';
   });
-  
-  const themeInsights = [
-    '这几张牌在一起，讲述了一个关于成长和转变的故事...',
-    '牌面之间形成了一个很有意义的对话，我看到了能量在流动...',
-    '这些牌在告诉我关于你现在的旅程...'
-  ];
-  
-  const closings = [
-    '无论牌面显示什么，记住——你永远都有选择的力量！加油！',
-    '一切都会好起来的。信我的话，也信你自己的力量！',
-    '保持信心。宇宙在回应你的问题，答案已经在路上了！',
-    '我看到了希望。相信自己，相信这个过程，你会找到答案的！',
-    '牌告诉我，你要相信自己。你比想象中更强大！'
-  ];
-  
-  const randomOpening = openings[Math.floor(Math.random() * openings.length)];
-  const randomTheme = themeInsights[Math.floor(Math.random() * themeInsights.length)];
-  const randomClosing = closings[Math.floor(Math.random() * closings.length)];
-  
-  let reading = '';
-  reading += randomOpening + '\n\n';
-  
-  cardInterpretations.forEach(cardReading => {
-    reading += cardReading + '\n';
-  });
-  
-  reading += '\n' + randomTheme + '\n\n';
-  
-  reading += randomClosing;
-  
-  return reading;
+
+  output += '整体解读\n';
+  let overall = '';
+  overall += `把这${selectedCards.length}张牌串起来看，`;
+  if (customerQuestion) {
+    overall += `你真正关心的是"${customerQuestion.length > 60 ? customerQuestion.slice(0, 60) + '……' : customerQuestion}"这个问题。`;
+    overall += `从整组牌的结构来看，`;
+  }
+  overall += `第一张牌更多回答的是事情当下的基础状态，`;
+  if (selectedCards.length > 1) {
+    overall += `中间部分承担了真正推动剧情的矛盾与转机，`;
+    overall += `而最后一张则指向这件事大概率会落在什么方向上。`;
+  }
+  overall += `你需要留意的是，这组牌里有没有出现前后相互矛盾的能量——`;
+  overall += `比如前面牌呈现出犹豫克制，后面却突然给出明确行动信号，这种前后反差往往就是整件事最关键的地方。`;
+  overall += `我不会把牌面直接当成已经发生的现实，它更像是在告诉你：当前的能量如果不做调整，会沿着什么趋势继续发展。`;
+  overall += `你真正掌握主动权的地方，在于是否能在看清趋势之后，主动调整自己的选择和做法，而不是等结果来到你面前才开始反应。`;
+  if (selectedCards.some(c => c.isReversed)) {
+    overall += `这组牌里出现了逆位牌，说明某些能量目前是卡住的、还没完全顺过来的状态，`;
+    overall += `这不是"坏事"，而是在提醒你：那部分议题需要更耐心地处理，急着推进反而会适得其反。`;
+  } else {
+    overall += `这组牌整体以正位为主，说明当前大多数变量是比较顺的，`;
+    overall += `但顺不代表不用做事，反而要在顺的时候把基础打得更扎实，以免后续遇到意外就崩掉。`;
+  }
+  output += overall + '\n\n';
+
+  output += '温馨提示\n';
+  let tips = '';
+  tips += `未来两到四周内，建议你先观察、再出手，不要一有情绪就立刻做决定。`;
+  tips += `具体来说，如果你在等对方的回应，就去看对方的实际行动有没有变化，`;
+  tips += `而不是只听他说了什么；如果你在推进一件事，就先做一个最小可执行的动作，`;
+  tips += `不要一开始就铺太大的局面。这段时间不适合过度消耗自己的情绪和精力，`;
+  tips += `也不适合反复追问自己"到底会不会"这种没有答案的问题。`;
+  tips += `你要做的是：把注意力拉回到自己身上，先照顾好睡眠、饮食和日常节奏，`;
+  tips += `然后等牌面中提到的那些关键信号真正出现时，再从容回应。`;
+  output += tips + '\n';
+
+  return output;
 }
 
 export function cleanInterpretationForImage(interpretation: string, spreadName?: string): string {

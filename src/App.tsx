@@ -34,6 +34,8 @@ function App() {
   const [customerStatement, setCustomerStatement] = useState('');
   const [customerQuestion, setCustomerQuestion] = useState('');
   const [refreshHistory, setRefreshHistory] = useState(false);
+  const [interpretationFallback, setInterpretationFallback] = useState(false);
+  const [interpretationError, setInterpretationError] = useState<string | undefined>(undefined);
 
   const { checkAuth, isAuthenticated } = useAuthStore();
 
@@ -56,13 +58,17 @@ function App() {
     setIsLoading(true);
 
     try {
-      const reading = await getInterpretation(input);
-      setInterpretation(reading);
+      const result = await getInterpretation(input);
+      setInterpretation(result.content);
+      setInterpretationFallback(result.isFallback);
+      setInterpretationError(result.errorMessage);
       // 传入 input 避免 React setState 异步导致闭包中状态仍为旧值
-      await handleSaveReading(undefined, reading, input);
+      await handleSaveReading(undefined, result.content, input);
     } catch (error) {
       console.error('Failed to get interpretation:', error);
       setInterpretation('抱歉，解读暂时无法获取，请稍后再试。');
+      setInterpretationFallback(true);
+      setInterpretationError(error instanceof Error ? error.message : String(error));
     } finally {
       setIsLoading(false);
     }
@@ -263,6 +269,8 @@ function App() {
                     onContinue={handleContinueReading}
                     onGoBack={() => setView('new-reading')}
                     onSave={handleSaveReading}
+                    isFallback={interpretationFallback}
+                    errorMessage={interpretationError}
                   />
                 )}
               </div>

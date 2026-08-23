@@ -11,9 +11,11 @@ interface ReadingPhaseProps {
   onContinue: () => void;
   onGoBack: () => void;
   onSave?: (uploadedImage?: string) => void | Promise<void>;
+  isFallback?: boolean;
+  errorMessage?: string;
 }
 
-export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave }: ReadingPhaseProps) {
+export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave, isFallback, errorMessage }: ReadingPhaseProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const readingRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,20 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
           </p>
         </div>
       </div>
+
+      {isFallback && (
+        <div className="mb-6 mx-auto max-w-3xl rounded-lg border border-amber-400/40 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+          <div className="font-semibold mb-1">⚠️ 本次解读为备用解读（解读服务未响应）</div>
+          {errorMessage ? (
+            <div className="text-amber-800/90 text-xs break-words">
+              错误原因：{errorMessage.slice(0, 200)}{errorMessage.length > 200 ? '……' : ''}
+            </div>
+          ) : null}
+          <div className="text-amber-800/80 mt-1 text-xs">
+            请检查网络与密钥配置，或稍后重试即可获得正式解读。
+          </div>
+        </div>
+      )}
 
       <div 
         ref={readingRef}
