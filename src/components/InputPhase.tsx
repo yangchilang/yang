@@ -99,6 +99,38 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
     setCardInputValues(initialInputValues);
   };
 
+  const handleAddCard = () => {
+    if (!selectedSpread) return;
+    const newPosition = selectedSpread.positions.length + 1;
+    const newPositions = [...selectedSpread.positions, { position: newPosition, meaning: '' }];
+    setSelectedSpread({ ...selectedSpread, positions: newPositions });
+    const newCard: SelectedCard = {
+      card: { id: 0, name: '', nameCn: '', meaning: '', reversedMeaning: '', element: '', zodiac: '', keywords: [] },
+      isReversed: false,
+      position: newPosition,
+      positionMeaning: ''
+    };
+    setSelectedCards([...selectedCards, newCard]);
+    setCardInputValues({ ...cardInputValues, [newPosition]: '' });
+  };
+
+  const handleRemoveCard = (position: number) => {
+    if (!selectedSpread) return;
+    const remaining = selectedSpread.positions
+      .filter(p => p.position !== position)
+      .map((p, idx) => ({ ...p, position: idx + 1 }));
+    setSelectedSpread({ ...selectedSpread, positions: remaining });
+    const newCards = selectedCards
+      .filter(c => c.position !== position)
+      .map((c, idx) => ({ ...c, position: idx + 1 }));
+    setSelectedCards(newCards);
+    const newInputValues: Record<number, string> = {};
+    Object.entries(cardInputValues).forEach(([_, value], idx) => {
+      if (idx < remaining.length) newInputValues[idx + 1] = value;
+    });
+    setCardInputValues(newInputValues);
+  };
+
   const handleCardInputChange = (position: number, value: string) => {
     setCardInputValues(prev => ({ ...prev, [position]: value }));
     
@@ -115,7 +147,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
   }
 
   const requiredCards = selectedSpread?.positions.length || 0;
-  const isComplete = selectedCards.length === requiredCards && 
+  const isComplete = requiredCards > 0 && selectedCards.length === requiredCards && 
     selectedCards.every(card => card.card.nameCn && card.card.nameCn.trim());
 
   return (
@@ -282,12 +314,41 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
         </div>
 
         <div className="bg-white rounded-xl p-6 md:p-8 border border-tarot-gold/20 shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-tarot-gold/20 rounded-full flex items-center justify-center">
-              <span className="text-tarot-gold font-decorative text-lg">🎴</span>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-tarot-gold/20 rounded-full flex items-center justify-center">
+                <span className="text-tarot-gold font-decorative text-lg">🎴</span>
+              </div>
+              <h2 className="text-xl font-decorative text-tarot-gray">卡牌详细</h2>
             </div>
-            <h2 className="text-xl font-decorative text-tarot-gray">卡牌详细</h2>
+            {selectedSpread?.id === 'custom-spread' && (
+              <button
+                onClick={handleAddCard}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-tarot-gold/20 hover:bg-tarot-gold/30 border border-tarot-gold/40 text-tarot-gray hover:text-tarot-gold transition-all font-decorative text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                添加卡牌
+              </button>
+            )}
           </div>
+
+          {selectedSpread?.positions.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-tarot-gold/30 text-4xl mb-4">🎴</div>
+              <p className="text-tarot-gray/50 font-crimson mb-4">请添加卡牌开始解读</p>
+              <button
+                onClick={handleAddCard}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-tarot-gold/20 hover:bg-tarot-gold/30 border border-tarot-gold/40 text-tarot-gray hover:text-tarot-gold transition-all font-decorative"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                添加第一张卡牌
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {selectedSpread?.positions.map((pos, index) => {
@@ -309,6 +370,17 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
                       <span className="text-tarot-gold font-decorative font-bold text-sm">{pos.position}</span>
                     </div>
                     <span className="font-decorative text-tarot-gray text-sm">第 {pos.position} 张牌</span>
+                    {selectedSpread?.id === 'custom-spread' && (
+                      <button
+                        onClick={() => handleRemoveCard(pos.position)}
+                        className="ml-auto text-red-400 hover:text-red-600 transition-colors"
+                        title="删除该牌位"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
 
                   <div className="space-y-3">
