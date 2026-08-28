@@ -3,6 +3,9 @@ compatibility_date = "2024-09-01"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
+# 明确告诉 wrangler 这是 Pages 项目（带 Functions）
+# functions 目录会被自动检测并部署
+
 [[d1_databases]]
 binding = "DB"
 database_name = "tarot-db"
