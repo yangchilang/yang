@@ -39,6 +39,12 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
             } catch {
               selectedCards = [];
             }
+            let spread: ReadingRecord['spread'];
+            try {
+              spread = r.spread ? JSON.parse(r.spread) : undefined;
+            } catch {
+              spread = undefined;
+            }
             return {
               id: String(r.id),
               selectedCards,
@@ -52,6 +58,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
               customerInfo: r.customer_info,
               customerStatement: r.customer_statement,
               customerQuestion: r.customer_question,
+              spread,
             };
           });
           setRecords(mapped);
@@ -156,7 +163,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
             type="text"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            placeholder="输入订单号或标题搜索..."
+            placeholder="输入订单号、标题或客户问题搜索..."
             className="flex-1 bg-tarot-lightgray/30 border-2 border-tarot-gold/30 rounded-lg px-4 py-2 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:border-tarot-gold focus:outline-none transition-colors"
           />
           <motion.button
@@ -209,29 +216,26 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                     className="cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-decorative text-tarot-gray">{result.title || '塔罗解读'}</h4>
+                      <h4 className="font-decorative text-tarot-gray">{result.spread?.name || '自定义牌阵'}</h4>
                       {result.relatedOrderId && (
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
                           关联记录
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="text-tarot-gold/60 font-crimson">
-                        订单号: {result.orderId}
-                      </span>
-                      {result.relatedOrderId && (
-                        <span className="text-tarot-gray/50 font-crimson">
-                          关联订单: {result.relatedOrderId}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-tarot-gray/70 font-crimson text-sm mt-2">
+                    <p className="text-tarot-gray/50 font-crimson text-sm">
                       {formatDate(result.createdAt)}
                     </p>
-                    <p className="text-tarot-gray/60 font-crimson text-sm line-clamp-2 mt-1">
-                      {result.interpretation.substring(0, 100)}...
-                    </p>
+                    <div className="space-y-1.5 font-crimson text-sm mt-2">
+                      <p className="text-tarot-gray/70">
+                        <span className="text-tarot-gray/40">订单号：</span>
+                        <span className="text-tarot-gold/70">{result.orderId || '—'}</span>
+                      </p>
+                      <p className="text-tarot-gray/70 line-clamp-2">
+                        <span className="text-tarot-gray/40">客户问题：</span>
+                        {result.customerQuestion || '—'}
+                      </p>
+                    </div>
                     <div className="mt-3 text-tarot-gold font-crimson text-sm flex items-center gap-1">
                       查看详情
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,16 +360,11 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <h3 className="text-lg font-decorative text-tarot-gray group-hover:text-tarot-gold transition-colors">
-                    {record.spread?.name || '塔罗解读'}
+                    {record.spread?.name || '自定义牌阵'}
                   </h3>
-                  <p className="text-tarot-gray/50 font-crimson text-sm">
+                  <p className="text-tarot-gray/50 font-crimson text-sm mt-0.5">
                     {formatDate(record.createdAt)}
                   </p>
-                  {record.orderId && (
-                    <p className="text-tarot-gold/60 font-crimson text-xs mt-1">
-                      订单号: {record.orderId}
-                    </p>
-                  )}
                 </div>
                 <button
                   onClick={(e) => handleDelete(record.id, e)}
@@ -377,28 +376,19 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                   </svg>
                 </button>
               </div>
-              
-              <div className="flex items-center gap-2 mb-3">
-                {record.selectedCards.slice(0, 5).map((sc) => (
-                  <div
-                    key={sc.card.id}
-                    className="text-xs text-tarot-gray/60 bg-tarot-lightgray/30 px-2 py-1 rounded"
-                  >
-                    {sc.card.nameCn}
-                  </div>
-                ))}
-                {record.selectedCards.length > 5 && (
-                  <div className="text-xs text-tarot-gray/40">
-                    +{record.selectedCards.length - 5}
-                  </div>
-                )}
+
+              <div className="space-y-2 font-crimson text-sm">
+                <p className="text-tarot-gray/70">
+                  <span className="text-tarot-gray/40">订单号：</span>
+                  <span className="text-tarot-gold/70">{record.orderId || '—'}</span>
+                </p>
+                <p className="text-tarot-gray/70 line-clamp-2">
+                  <span className="text-tarot-gray/40">客户问题：</span>
+                  {record.customerQuestion || '—'}
+                </p>
               </div>
 
-              <p className="text-tarot-gray/60 font-crimson text-sm line-clamp-2">
-                {record.interpretation.substring(0, 100)}...
-              </p>
-
-              <div className="mt-3 text-tarot-gold/60 font-crimson text-sm flex items-center gap-1">
+              <div className="mt-4 text-tarot-gold/60 font-crimson text-sm flex items-center gap-1">
                 查看详情
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

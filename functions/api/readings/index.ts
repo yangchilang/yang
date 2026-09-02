@@ -52,7 +52,7 @@ export async function onRequestPost(context: any) {
   const {
     cards, interpretation, user_context, order_id, title,
     customer_gender, related_order_id, customer_info,
-    customer_statement, customer_question,
+    customer_statement, customer_question, spread,
   } = body;
 
   if (!cards || !order_id) {
@@ -60,15 +60,17 @@ export async function onRequestPost(context: any) {
   }
 
   const cardsJson = typeof cards === 'string' ? cards : JSON.stringify(cards);
+  const spreadJson = spread ? (typeof spread === 'string' ? spread : JSON.stringify(spread)) : null;
 
   const result = await queryRun(
     env,
-    `INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, title, customer_gender, related_order_id, customer_info, customer_statement, customer_question)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO readings (user_id, cards, interpretation, user_context, order_id, title, customer_gender, related_order_id, customer_info, customer_statement, customer_question, spread)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
     [
       authUser.userId, cardsJson, interpretation || '', user_context || '',
       order_id, title || null, customer_gender || null, related_order_id || null,
       customer_info || null, customer_statement || null, customer_question || null,
+      spreadJson,
     ]
   );
 

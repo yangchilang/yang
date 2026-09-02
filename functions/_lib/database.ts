@@ -63,6 +63,7 @@ export async function ensureDatabase(env: Env): Promise<void> {
         customer_info TEXT,
         customer_statement TEXT,
         customer_question TEXT,
+        spread TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       )
     `),
@@ -70,6 +71,13 @@ export async function ensureDatabase(env: Env): Promise<void> {
     env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_readings_created_at ON readings(created_at DESC)`),
     env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_readings_order_id ON readings(order_id)`),
   ]);
+
+  // 兼容旧库：补充 spread 列（列已存在时 D1 会报错，忽略即可）
+  try {
+    await env.DB.prepare(`ALTER TABLE readings ADD COLUMN spread TEXT`).run();
+  } catch (e) {
+    // 列已存在，无需处理
+  }
 
   // 创建默认管理员
   const existing = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind('yue').first();

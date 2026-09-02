@@ -16,6 +16,7 @@ export interface BackendReading {
   customer_info?: string;
   customer_statement?: string;
   customer_question?: string;
+  spread?: string;
   created_at: string;
 }
 
@@ -30,6 +31,12 @@ export interface PaginatedReadings {
 }
 
 function backendToRecord(r: BackendReading): ReadingRecord {
+  let spread: Spread | undefined;
+  try {
+    spread = r.spread ? (JSON.parse(r.spread) as Spread) : undefined;
+  } catch {
+    spread = undefined;
+  }
   return {
     id: String(r.id),
     selectedCards: JSON.parse(r.cards) as SelectedCard[],
@@ -43,6 +50,7 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     customerInfo: r.customer_info,
     customerStatement: r.customer_statement,
     customerQuestion: r.customer_question,
+    spread,
   };
 }
 

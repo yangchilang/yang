@@ -21,11 +21,11 @@ export async function onRequestGet(context: any) {
 
   const pattern = `%${keyword}%`;
 
-  // 搜索匹配的解读
+  // 搜索匹配的解读（订单号、关联订单、标题、客户问题）
   const searchResult = await query(
     env,
-    `SELECT * FROM readings WHERE user_id = ? AND (order_id LIKE ? OR related_order_id LIKE ? OR title LIKE ?) ORDER BY created_at DESC`,
-    [authUser.userId, pattern, pattern, pattern]
+    `SELECT * FROM readings WHERE user_id = ? AND (order_id LIKE ? OR related_order_id LIKE ? OR title LIKE ? OR customer_question LIKE ?) ORDER BY created_at DESC`,
+    [authUser.userId, pattern, pattern, pattern, pattern]
   );
 
   const readings = searchResult.rows;
