@@ -26,7 +26,7 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
     try {
       const canvas = await html2canvas(exportRef.current, {
         backgroundColor: '#ffffff',
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
       });
@@ -348,9 +348,9 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
         ref={exportRef}
         style={{ position: 'absolute', left: '-9999px', top: 0, width: '600px' }}
       >
-        <div style={{ background: '#fcfbf7', padding: '48px 36px 40px', fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", "Georgia", serif' }}>
+        <div style={{ background: '#fcfbf7', padding: '56px 44px 48px', fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", "Georgia", serif' }}>
           {record.uploadedImage && (
-            <div style={{ marginBottom: '28px' }}>
+            <div style={{ marginBottom: '32px' }}>
               <img
                 src={record.uploadedImage}
                 alt="牌阵实拍"
@@ -358,21 +358,21 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
               />
             </div>
           )}
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ fontSize: '22px', color: '#2c2c2c', fontWeight: 500, letterSpacing: '1px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ fontSize: '32px', color: '#2c2c2c', fontWeight: 600, letterSpacing: '2px' }}>
               {record.spread?.name || '塔罗解读'}
             </div>
           </div>
-          <div style={{ width: '32px', height: '2px', background: '#d4af37', margin: '0 auto 28px' }} />
+          <div style={{ width: '40px', height: '2px', background: '#d4af37', margin: '0 auto 36px' }} />
           {parseInterpretation(record.interpretation).length > 0 ? (
             parseInterpretation(record.interpretation).map((block, i) => {
               const bodyStyle: React.CSSProperties = {
-                fontSize: '16px',
-                lineHeight: 1.9,
+                fontSize: '24px',
+                lineHeight: 1.85,
                 color: '#3a3a3a',
                 whiteSpace: 'pre-line',
                 textAlign: 'justify',
-                letterSpacing: '0.3px',
+                letterSpacing: '0.5px',
               };
               if (block.type === 'card') {
                 const card = record.selectedCards[block.cardIndex];
@@ -380,8 +380,8 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
                   ? `第${block.cardIndex + 1}张牌，${card.card.nameCn}`
                   : `第${block.cardIndex + 1}张牌`;
                 return (
-                  <div key={i} style={{ marginBottom: '26px' }}>
-                    <div style={{ fontSize: '17px', fontWeight: 600, color: '#2c2c2c', marginBottom: '10px', letterSpacing: '0.5px' }}>
+                  <div key={i} style={{ marginBottom: '34px' }}>
+                    <div style={{ fontSize: '26px', fontWeight: 600, color: '#2c2c2c', marginBottom: '14px', letterSpacing: '1px' }}>
                       {cardTitle}
                     </div>
                     <div style={bodyStyle}>{block.body}</div>
@@ -389,18 +389,18 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
                 );
               }
               return (
-                <div key={i} style={{ ...bodyStyle, marginBottom: '26px' }}>
+                <div key={i} style={{ ...bodyStyle, marginBottom: '34px' }}>
                   {block.body}
                 </div>
               );
             })
           ) : (
-            <div style={{ fontSize: '16px', lineHeight: '1.9', color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.3px' }}>
+            <div style={{ fontSize: '24px', lineHeight: 1.85, color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.5px' }}>
               {cleanInterpretationForImage(record.interpretation, record.spread?.name)}
             </div>
           )}
-          <div style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: '#999999', letterSpacing: '0.3px', lineHeight: '1.7' }}>
+          <div style={{ marginTop: '44px', paddingTop: '20px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
+            <div style={{ fontSize: '15px', color: '#999999', letterSpacing: '0.5px', lineHeight: 1.8 }}>
               塔罗只是一面镜子，帮你看清当下的能量与倾向，真正需要书写答案的依然是你自己。愿你带着清晰与勇气，一步一步走向自己真正想要的方向。
             </div>
           </div>
