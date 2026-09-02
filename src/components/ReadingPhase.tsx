@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import { SelectedCard, Spread } from '../types';
-import { cleanInterpretationForImage } from '../services/aiService';
+import { cleanInterpretationForImage, parseInterpretation } from '../services/aiService';
 
 interface ReadingPhaseProps {
   selectedCards: SelectedCard[];
@@ -18,11 +18,14 @@ interface ReadingPhaseProps {
 export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave, isFallback, errorMessage }: ReadingPhaseProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const readingRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const [showDownload, setShowDownload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,6 +34,12 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // 上传/更换照片后，之前生成的长图已过期，清空后需重新生成
+  useEffect(() => {
+    setGeneratedImage(null);
+    canvasRef.current = null;
+  }, [uploadedImage]);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,6 +107,7 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
         allowTaint: true,
       });
       
+      canvasRef.current = canvas;
       const imageData = canvas.toDataURL('image/png');
       setGeneratedImage(imageData);
     } catch (error) {
@@ -114,6 +124,34 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
     link.download = `tarot-reading-${Date.now()}.png`;
     link.href = generatedImage;
     link.click();
+  };
+
+  const handleCopyImage = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    if (!navigator.clipboard || typeof ClipboardItem === 'undefined') {
+      alert('当前浏览器不支持直接复制图片，请长按预览图保存，或使用「下载长图」按钮。');
+      return;
+    }
+
+    setIsCopying(true);
+    try {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('图片生成失败');
+
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob }),
+      ]);
+
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy image:', error);
+      alert('复制失败，您可以长按预览图直接保存，或使用「下载长图」按钮保存后发送。');
+    } finally {
+      setIsCopying(false);
+    }
   };
 
   return (
@@ -345,6 +383,14 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
             >
               下载长图
             </button>
+
+            <button
+              onClick={handleCopyImage}
+              disabled={!generatedImage || isCopying}
+              className="px-8 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCopying ? '复制中...' : copySuccess ? '已复制 ✓' : '复制图片'}
+            </button>
             
             <button
               onClick={onContinue}
@@ -392,9 +438,41 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
             </div>
           </div>
           <div style={{ width: '32px', height: '2px', background: '#d4af37', margin: '0 auto 28px' }} />
-          <div style={{ fontSize: '16px', lineHeight: '1.9', color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.3px' }}>
-            {cleanInterpretationForImage(interpretation, spread?.name)}
-          </div>
+          {parseInterpretation(interpretation).length > 0 ? (
+            parseInterpretation(interpretation).map((block, i) => {
+              const bodyStyle: React.CSSProperties = {
+                fontSize: '16px',
+                lineHeight: 1.9,
+                color: '#3a3a3a',
+                whiteSpace: 'pre-line',
+                textAlign: 'justify',
+                letterSpacing: '0.3px',
+              };
+              if (block.type === 'card') {
+                const card = selectedCards[block.cardIndex];
+                const cardTitle = card
+                  ? `第${block.cardIndex + 1}张牌，${card.card.nameCn}`
+                  : `第${block.cardIndex + 1}张牌`;
+                return (
+                  <div key={i} style={{ marginBottom: '26px' }}>
+                    <div style={{ fontSize: '17px', fontWeight: 600, color: '#2c2c2c', marginBottom: '10px', letterSpacing: '0.5px' }}>
+                      {cardTitle}
+                    </div>
+                    <div style={bodyStyle}>{block.body}</div>
+                  </div>
+                );
+              }
+              return (
+                <div key={i} style={{ ...bodyStyle, marginBottom: '26px' }}>
+                  {block.body}
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ fontSize: '16px', lineHeight: '1.9', color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.3px' }}>
+              {cleanInterpretationForImage(interpretation, spread?.name)}
+            </div>
+          )}
           <div style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: '#999999', letterSpacing: '0.3px', lineHeight: '1.7' }}>
               塔罗只是一面镜子，帮你看清当下的能量与倾向，真正需要书写答案的依然是你自己。愿你带着清晰与勇气，一步一步走向自己真正想要的方向。

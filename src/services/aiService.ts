@@ -547,6 +547,59 @@ function generateFallbackInterpretation(input: ReadingInput): string {
   return output;
 }
 
+export interface InterpretationBlock {
+  type: 'card' | 'overall' | 'tips';
+  cardIndex: number; // card 类型为 0-based 牌序号；overall/tips 为 -1
+  body: string;
+}
+
+// 把解读纯文本解析为结构化段落：逐张牌 / 整体解读 / 温馨提示。
+// 标题区（第一个结构标记之前的牌阵名等）直接丢弃，长图模板已有大标题。
+export function parseInterpretation(interpretation: string): InterpretationBlock[] {
+  const lines = interpretation.split(/\r?\n/);
+  const blocks: InterpretationBlock[] = [];
+  let current: InterpretationBlock | null = null;
+  const bodyLines: string[] = [];
+
+  const flush = () => {
+    if (current) {
+      const body = bodyLines.join('\n').trim();
+      if (body) blocks.push({ ...current, body });
+    }
+    bodyLines.length = 0;
+  };
+
+  const stripMarkdown = (s: string) => s.replace(/[*#`]/g, '').trim();
+
+  for (const rawLine of lines) {
+    const line = stripMarkdown(rawLine);
+
+    if (/^第\s*[0-9０-９一二三四五六七八九十]+\s*张牌/.test(line)) {
+      flush();
+      current = { type: 'card', cardIndex: blocks.filter(b => b.type === 'card').length, body: '' };
+      continue;
+    }
+    if (line === '整体解读') {
+      flush();
+      current = { type: 'overall', cardIndex: -1, body: '' };
+      continue;
+    }
+    if (line === '温馨提示') {
+      flush();
+      current = { type: 'tips', cardIndex: -1, body: '' };
+      continue;
+    }
+
+    // 第一个结构标记之前的内容视为标题区，丢弃（长图已有大标题）
+    if (!current) continue;
+
+    bodyLines.push(rawLine);
+  }
+  flush();
+
+  return blocks;
+}
+
 export function cleanInterpretationForImage(interpretation: string, spreadName?: string): string {
   const lines = interpretation.split(/\r?\n/);
   const filtered = lines.filter(line => {
