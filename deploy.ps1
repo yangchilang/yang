@@ -38,7 +38,7 @@ Write-Host "     ✅ 构建完成 (dist/)" -ForegroundColor Green
 Write-Host ""
 Write-Host "[2/6] 第一次部署 Pages（创建项目 $PROJECT_NAME）..." -ForegroundColor Yellow
 Write-Host "     如果弹出浏览器授权窗口，请点击「允许」。" -ForegroundColor Gray
-npx wrangler pages deploy dist --branch $BRANCH --project-name $PROJECT_NAME
+npx wrangler pages deploy dist --branch $BRANCH --project-name $PROJECT_NAME --functions functions
 if ($LASTEXITCODE -ne 0) {
     Write-Host "     ❌ 部署失败，如果提示未登录请先执行：npx wrangler login" -ForegroundColor Red
     exit 1
@@ -67,7 +67,8 @@ $tmpFile = Join-Path $env:TEMP ("tarot-key-" + (Get-Random) + ".txt")
 try {
     [System.IO.File]::WriteAllText($tmpFile, $plainKey, [System.Text.Encoding]::UTF8)
     Write-Host "     临时密钥文件: $tmpFile（用完立即删除）" -ForegroundColor Gray
-    npx wrangler secret put VITE_API_KEY --project-name $PROJECT_NAME --from-file $tmpFile
+    # 注意：Pages 项目必须用 wrangler pages secret put；wrangler secret put 是 Workers 的命令，对 Pages 无效
+    Get-Content $tmpFile -Raw | npx wrangler pages secret put VITE_API_KEY --project-name $PROJECT_NAME
     if ($LASTEXITCODE -ne 0) {
         Write-Host "     ❌ 写入 Secret 失败，请检查上方错误" -ForegroundColor Red
         exit 1
@@ -80,7 +81,7 @@ try {
 
 Write-Host ""
 Write-Host "[5/6] 再次部署（让 Secret 配置生效）..." -ForegroundColor Yellow
-npx wrangler pages deploy dist --branch $BRANCH --project-name $PROJECT_NAME
+npx wrangler pages deploy dist --branch $BRANCH --project-name $PROJECT_NAME --functions functions
 Write-Host "     ✅ 部署完成" -ForegroundColor Green
 
 Write-Host ""
