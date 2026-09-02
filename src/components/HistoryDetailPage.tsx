@@ -303,12 +303,21 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
         </motion.div>
       )}
 
-      {/* 长图导出模板 - 仅解读文字，备忘录风格 */}
+      {/* 长图导出模板 - 上部牌阵实拍照片 + 下部解读文字，备忘录风格 */}
       <div
         ref={exportRef}
         style={{ position: 'absolute', left: '-9999px', top: 0, width: '600px' }}
       >
         <div style={{ background: '#fcfbf7', padding: '48px 36px 40px', fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", "Georgia", serif' }}>
+          {record.uploadedImage && (
+            <div style={{ marginBottom: '28px' }}>
+              <img
+                src={record.uploadedImage}
+                alt="牌阵实拍"
+                style={{ width: '100%', display: 'block', borderRadius: '8px', border: '1px solid #ece7db' }}
+              />
+            </div>
+          )}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <div style={{ fontSize: '22px', color: '#2c2c2c', fontWeight: 500, letterSpacing: '1px' }}>
               {record.spread?.name || '塔罗解读'}
