@@ -99,6 +99,22 @@ export function getReadingRecordById(id: string): ReadingRecord | undefined {
   return history.find(r => r.id === id);
 }
 
+// 更新本地存储中的某条记录（重新解读后回写）
+export function updateReadingRecordLocal(updated: ReadingRecord): void {
+  try {
+    const history = getReadingHistory();
+    const idx = history.findIndex(r => r.id === updated.id);
+    if (idx >= 0) {
+      history[idx] = updated;
+    } else {
+      history.unshift(updated);
+    }
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error('Failed to update reading record:', error);
+  }
+}
+
 // Backend API wrappers
 
 export async function fetchReadingHistory(page = 1, limit = 10): Promise<PaginatedReadings | null> {
@@ -162,6 +178,25 @@ export async function deleteBackendReading(id: number): Promise<boolean> {
     console.error('Failed to delete reading from backend:', error);
   }
   return false;
+}
+
+// 更新后端解读记录（重新解读成功后回写）
+export async function updateBackendReading(
+  id: number,
+  payload: { interpretation?: string; spread?: Spread }
+): Promise<ReadingRecord | null> {
+  try {
+    const response = await apiRequest<BackendReading>(`/readings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (response.success && response.data) {
+      return backendToRecord(response.data);
+    }
+  } catch (error) {
+    console.error('Failed to update reading on backend:', error);
+  }
+  return null;
 }
 
 export async function searchReadings(keyword: string): Promise<ReadingRecord[]> {

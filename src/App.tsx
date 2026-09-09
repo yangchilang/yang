@@ -234,6 +234,10 @@ function App() {
               <HistoryDetailPage
                 record={currentRecord}
                 onBack={() => setView('home')}
+                onRecordUpdated={(r) => {
+                  setCurrentRecord(r);
+                  setRefreshHistory(prev => !prev);
+                }}
               />
             </Suspense>
           </ErrorBoundary>

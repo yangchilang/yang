@@ -1,15 +1,18 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import { ReadingRecord } from '../types';
-import { cleanInterpretationForImage, parseInterpretation } from '../services/aiService';
+import { ReadingRecord, ReadingInput } from '../types';
+import { cleanInterpretationForImage, parseInterpretation, getInterpretation } from '../services/aiService';
+import { updateReadingRecordLocal, updateBackendReading } from '../services/historyService';
+import { useAuthStore } from '../store/authStore';
 
 interface HistoryDetailPageProps {
   record: ReadingRecord;
   onBack: () => void;
+  onRecordUpdated?: (record: ReadingRecord) => void;
 }
 
-export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
+export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDetailPageProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -17,6 +20,64 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
   const exportRef = useRef<HTMLDivElement>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+
+  // 重新解读相关状态：interpretation 用本地状态承载，重新解读成功后立即刷新页面
+  const [interpretation, setInterpretation] = useState(record.interpretation);
+  const [isReinterpreting, setIsReinterpreting] = useState(false);
+  const [reinterpretError, setReinterpretError] = useState<string | undefined>(undefined);
+  const [isFallback, setIsFallback] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+
+  const handleReinterpret = async () => {
+    setIsReinterpreting(true);
+    setReinterpretError(undefined);
+    try {
+      const input: ReadingInput = {
+        selectedCards: record.selectedCards,
+        userContext: record.userContext,
+        spread: record.spread,
+        orderId: record.orderId,
+        title: record.title,
+        customerGender: record.customerGender,
+        relatedOrderId: record.relatedOrderId,
+        customerInfo: record.customerInfo,
+        customerStatement: record.customerStatement,
+        customerQuestion: record.customerQuestion,
+      };
+
+      const result = await getInterpretation(input);
+      setInterpretation(result.content);
+      setIsFallback(result.isFallback);
+      setReinterpretError(result.errorMessage);
+      // 内容更新后，之前生成的长图已过期
+      setGeneratedImage(null);
+      canvasRef.current = null;
+
+      // 只有正式解读才回写记录；备用解读不落库，避免覆盖原有内容
+      if (!result.isFallback) {
+        const updated: ReadingRecord = { ...record, interpretation: result.content };
+        updateReadingRecordLocal(updated);
+
+        let finalRecord = updated;
+        if (isAuthenticated) {
+          const numId = parseInt(record.id, 10);
+          if (!isNaN(numId)) {
+            const backendRecord = await updateBackendReading(numId, {
+              interpretation: result.content,
+              ...(record.spread ? { spread: record.spread } : {}),
+            });
+            if (backendRecord) finalRecord = backendRecord;
+          }
+        }
+        onRecordUpdated?.(finalRecord);
+      }
+    } catch (error) {
+      console.error('Failed to reinterpret:', error);
+      setReinterpretError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsReinterpreting(false);
+    }
+  };
 
   const handleGenerateImage = async () => {
     if (!exportRef.current) return;
@@ -118,6 +179,20 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
           </p>
         </div>
       </div>
+
+      {(isFallback || reinterpretError) && (
+        <div className="mb-6 rounded-lg border border-amber-400/40 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+          <div className="font-semibold mb-1">⚠️ 本次为备用解读（解读服务未响应）</div>
+          {reinterpretError ? (
+            <div className="text-amber-800/90 text-xs break-words">
+              错误原因：{reinterpretError.slice(0, 200)}{reinterpretError.length > 200 ? '……' : ''}
+            </div>
+          ) : null}
+          <div className="text-amber-800/80 mt-1 text-xs">
+            请检查网络后点击下方「重新解读」按钮重试，即可获得正式解读。
+          </div>
+        </div>
+      )}
 
       <div 
         ref={readingRef}
@@ -267,9 +342,31 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
             <div className="text-tarot-gold font-decorative text-lg mb-4 text-center">
               ✧ 总结 ✧
             </div>
-            <div className="text-tarot-gray font-crimson text-lg leading-relaxed whitespace-pre-line">
-              {record.interpretation}
-            </div>
+            {isReinterpreting ? (
+              <div className="text-center py-10">
+                <div className="relative w-16 h-16 mx-auto mb-4">
+                  <div className="absolute inset-0 border-4 border-tarot-gold/20 rounded-full" />
+                  <div className="absolute inset-0 border-4 border-tarot-gold/50 rounded-full animate-spin border-t-transparent" />
+                </div>
+                <p className="text-tarot-gray/70 font-crimson">正在重新解读，请稍候...</p>
+              </div>
+            ) : interpretation ? (
+              <div className="text-tarot-gray font-crimson text-lg leading-relaxed whitespace-pre-line">
+                {interpretation}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-tarot-gray/60 font-crimson mb-4">
+                  这条记录还没有解读内容（可能是草稿或上次解读失败）
+                </p>
+                <button
+                  onClick={handleReinterpret}
+                  className="px-8 py-3 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
+                >
+                  立即解读
+                </button>
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -304,8 +401,16 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
         className="mt-8 flex flex-col md:flex-row gap-4 justify-center"
       >
         <button
+          onClick={handleReinterpret}
+          disabled={isReinterpreting || !record.selectedCards.length}
+          className="px-8 py-3 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
+        >
+          {isReinterpreting ? '重新解读中...' : '重新解读'}
+        </button>
+
+        <button
           onClick={handleGenerateImage}
-          disabled={isGenerating}
+          disabled={isGenerating || isReinterpreting || !interpretation}
           className="px-8 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all disabled:opacity-50"
         >
           {isGenerating ? '生成中...' : '生成长图'}
@@ -314,7 +419,7 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
         <button
           onClick={handleDownload}
           disabled={!generatedImage}
-          className="px-8 py-3 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
+          className="px-8 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           下载长图
         </button>
@@ -364,8 +469,8 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
             </div>
           </div>
           <div style={{ width: '40px', height: '2px', background: '#d4af37', margin: '0 auto 36px' }} />
-          {parseInterpretation(record.interpretation).length > 0 ? (
-            parseInterpretation(record.interpretation).map((block, i) => {
+          {parseInterpretation(interpretation).length > 0 ? (
+            parseInterpretation(interpretation).map((block, i) => {
               const bodyStyle: React.CSSProperties = {
                 fontSize: '24px',
                 lineHeight: 1.85,
@@ -396,7 +501,7 @@ export function HistoryDetailPage({ record, onBack }: HistoryDetailPageProps) {
             })
           ) : (
             <div style={{ fontSize: '24px', lineHeight: 1.85, color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.5px' }}>
-              {cleanInterpretationForImage(record.interpretation, record.spread?.name)}
+              {cleanInterpretationForImage(interpretation, record.spread?.name)}
             </div>
           )}
           <div style={{ marginTop: '44px', paddingTop: '20px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
