@@ -11,11 +11,12 @@ interface ReadingPhaseProps {
   onContinue: () => void;
   onGoBack: () => void;
   onSave?: (uploadedImage?: string) => void | Promise<void>;
+  onInterpretationEdit?: (text: string) => void;
   isFallback?: boolean;
   errorMessage?: string;
 }
 
-export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave, isFallback, errorMessage }: ReadingPhaseProps) {
+export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave, onInterpretationEdit, isFallback, errorMessage }: ReadingPhaseProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -28,6 +29,11 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
   const [copySuccess, setCopySuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 解读文本编辑：displayInterpretation 为页面展示与长图生成实际使用的内容
+  const [displayInterpretation, setDisplayInterpretation] = useState(interpretation);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingText, setEditingText] = useState(interpretation);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowDownload(true);
@@ -35,11 +41,40 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
     return () => clearTimeout(timer);
   }, []);
 
+  // 外部解读内容变化（如重新生成）时同步本地展示内容
+  useEffect(() => {
+    setDisplayInterpretation(interpretation);
+  }, [interpretation]);
+
   // 上传/更换照片后，之前生成的长图已过期，清空后需重新生成
   useEffect(() => {
     setGeneratedImage(null);
     canvasRef.current = null;
   }, [uploadedImage]);
+
+  const handleStartEdit = () => {
+    setEditingText(displayInterpretation);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingText(displayInterpretation);
+  };
+
+  const handleFinishEdit = () => {
+    const newText = editingText.trim();
+    if (!newText) {
+      alert('解读内容不能为空');
+      return;
+    }
+    setDisplayInterpretation(newText);
+    setIsEditing(false);
+    // 内容修改后，之前生成的长图已过期，清空后需重新生成
+    setGeneratedImage(null);
+    canvasRef.current = null;
+    onInterpretationEdit?.(newText);
+  };
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -328,12 +363,51 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
             transition={{ delay: 0.5 }}
             className="bg-tarot-gold/5 rounded-lg p-6 border border-tarot-gold/20 mb-8"
           >
-            <div className="text-tarot-gold font-decorative text-lg mb-4 text-center">
-              ✧ 总结 ✧
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="text-tarot-gold font-decorative text-lg">
+                ✧ 总结 ✧
+              </div>
+              {!isEditing && (
+                <button
+                  onClick={handleStartEdit}
+                  className="text-xs px-3 py-1 rounded-full border border-tarot-gold/40 text-tarot-gold/80 hover:bg-tarot-gold/10 hover:text-tarot-gold transition-colors font-crimson"
+                >
+                  ✏️ 编辑解读
+                </button>
+              )}
             </div>
-            <div className="text-tarot-gray font-crimson text-lg leading-relaxed whitespace-pre-line">
-              {interpretation}
-            </div>
+            {isEditing ? (
+              <div>
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  className="w-full rounded-lg border-2 border-tarot-gold/40 bg-white p-4 text-tarot-gray font-crimson text-base leading-relaxed resize-y focus:outline-none focus:border-tarot-gold"
+                  style={{ minHeight: '320px' }}
+                  placeholder="可在此修改解读内容，生成长图时将使用修改后的内容"
+                />
+                <div className="flex flex-col md:flex-row gap-3 justify-center mt-4">
+                  <button
+                    onClick={handleFinishEdit}
+                    className="px-6 py-2.5 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
+                  >
+                    完成编辑
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-6 py-2.5 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all"
+                  >
+                    取消
+                  </button>
+                </div>
+                <p className="text-tarot-gray/50 font-crimson text-xs text-center mt-3">
+                  修改完成后点击「完成编辑」，生成长图将使用修改后的内容
+                </p>
+              </div>
+            ) : (
+              <div className="text-tarot-gray font-crimson text-lg leading-relaxed whitespace-pre-line">
+                {displayInterpretation}
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -370,7 +444,7 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
           >
             <button
               onClick={handleGenerateImage}
-              disabled={isGenerating}
+              disabled={isGenerating || isEditing}
               className="px-8 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all disabled:opacity-50"
             >
               {isGenerating ? '生成中...' : '生成长图'}
@@ -438,8 +512,8 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
             </div>
           </div>
           <div style={{ width: '40px', height: '2px', background: '#d4af37', margin: '0 auto 36px' }} />
-          {parseInterpretation(interpretation).length > 0 ? (
-            parseInterpretation(interpretation).map((block, i) => {
+          {parseInterpretation(displayInterpretation).length > 0 ? (
+            parseInterpretation(displayInterpretation).map((block, i) => {
               const bodyStyle: React.CSSProperties = {
                 fontSize: '24px',
                 lineHeight: 1.85,
@@ -470,7 +544,7 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
             })
           ) : (
             <div style={{ fontSize: '24px', lineHeight: 1.85, color: '#3a3a3a', whiteSpace: 'pre-line', textAlign: 'justify', letterSpacing: '0.5px' }}>
-              {cleanInterpretationForImage(interpretation, spread?.name)}
+              {cleanInterpretationForImage(displayInterpretation, spread?.name)}
             </div>
           )}
           <div style={{ marginTop: '44px', paddingTop: '20px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>

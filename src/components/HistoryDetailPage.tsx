@@ -26,7 +26,60 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
   const [isReinterpreting, setIsReinterpreting] = useState(false);
   const [reinterpretError, setReinterpretError] = useState<string | undefined>(undefined);
   const [isFallback, setIsFallback] = useState(false);
+  // 解读文本编辑状态
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingText, setEditingText] = useState(record.interpretation);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const { isAuthenticated } = useAuthStore();
+
+  const handleStartEdit = () => {
+    setEditingText(interpretation);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingText(interpretation);
+  };
+
+  const handleFinishEdit = async () => {
+    const newText = editingText.trim();
+    if (!newText) {
+      alert('解读内容不能为空');
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      setInterpretation(newText);
+      setIsEditing(false);
+      // 内容修改后，之前生成的长图已过期
+      setGeneratedImage(null);
+      canvasRef.current = null;
+
+      // 回写本地与后端记录
+      const updated: ReadingRecord = { ...record, interpretation: newText };
+      updateReadingRecordLocal(updated);
+
+      let finalRecord = updated;
+      if (isAuthenticated) {
+        const numId = parseInt(record.id, 10);
+        if (!isNaN(numId)) {
+          const backendRecord = await updateBackendReading(numId, {
+            interpretation: newText,
+            ...(record.spread ? { spread: record.spread } : {}),
+          });
+          if (backendRecord) finalRecord = backendRecord;
+        }
+      }
+      onRecordUpdated?.(finalRecord);
+    } catch (error) {
+      console.error('Failed to save edited interpretation:', error);
+      alert('保存失败，请稍后重试');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   const handleReinterpret = async () => {
     setIsReinterpreting(true);
@@ -339,8 +392,18 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
             transition={{ delay: 0.5 }}
             className="bg-tarot-gold/5 rounded-lg p-6 border border-tarot-gold/20 mb-8"
           >
-            <div className="text-tarot-gold font-decorative text-lg mb-4 text-center">
-              ✧ 总结 ✧
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="text-tarot-gold font-decorative text-lg">
+                ✧ 总结 ✧
+              </div>
+              {!isReinterpreting && !isEditing && interpretation && (
+                <button
+                  onClick={handleStartEdit}
+                  className="text-xs px-3 py-1 rounded-full border border-tarot-gold/40 text-tarot-gold/80 hover:bg-tarot-gold/10 hover:text-tarot-gold transition-colors font-crimson"
+                >
+                  ✏️ 编辑解读
+                </button>
+              )}
             </div>
             {isReinterpreting ? (
               <div className="text-center py-10">
@@ -349,6 +412,35 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
                   <div className="absolute inset-0 border-4 border-tarot-gold/50 rounded-full animate-spin border-t-transparent" />
                 </div>
                 <p className="text-tarot-gray/70 font-crimson">正在重新解读，请稍候...</p>
+              </div>
+            ) : isEditing ? (
+              <div>
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  className="w-full rounded-lg border-2 border-tarot-gold/40 bg-white p-4 text-tarot-gray font-crimson text-base leading-relaxed resize-y focus:outline-none focus:border-tarot-gold"
+                  style={{ minHeight: '320px' }}
+                  placeholder="可在此修改解读内容，生成长图时将使用修改后的内容"
+                />
+                <div className="flex flex-col md:flex-row gap-3 justify-center mt-4">
+                  <button
+                    onClick={handleFinishEdit}
+                    disabled={isSavingEdit}
+                    className="px-6 py-2.5 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white hover:shadow-lg hover:shadow-tarot-gold/30 transition-all disabled:opacity-50"
+                  >
+                    {isSavingEdit ? '保存中...' : '完成编辑'}
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isSavingEdit}
+                    className="px-6 py-2.5 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all disabled:opacity-50"
+                  >
+                    取消
+                  </button>
+                </div>
+                <p className="text-tarot-gray/50 font-crimson text-xs text-center mt-3">
+                  修改完成后点击「完成编辑」，生成长图将使用修改后的内容
+                </p>
               </div>
             ) : interpretation ? (
               <div className="text-tarot-gray font-crimson text-lg leading-relaxed whitespace-pre-line">
@@ -402,7 +494,7 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
       >
         <button
           onClick={handleReinterpret}
-          disabled={isReinterpreting || !record.selectedCards.length}
+          disabled={isReinterpreting || isEditing || isSavingEdit || !record.selectedCards.length}
           className="px-8 py-3 rounded-lg font-decorative bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-tarot-gold/30 transition-all"
         >
           {isReinterpreting ? '重新解读中...' : '重新解读'}
@@ -410,7 +502,7 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
 
         <button
           onClick={handleGenerateImage}
-          disabled={isGenerating || isReinterpreting || !interpretation}
+          disabled={isGenerating || isReinterpreting || isEditing || isSavingEdit || !interpretation}
           className="px-8 py-3 rounded-lg font-decorative bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all disabled:opacity-50"
         >
           {isGenerating ? '生成中...' : '生成长图'}

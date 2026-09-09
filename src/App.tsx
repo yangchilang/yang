@@ -9,7 +9,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Auth/Login';
 import { SelectedCard, ReadingInput, Spread, ReadingRecord } from './types';
 import { getInterpretation } from './services/aiService';
-import { saveReadingRecord, createReadingRecord } from './services/historyService';
+import { saveReadingRecord, createReadingRecord, getReadingRecordById, updateReadingRecordLocal, updateBackendReading } from './services/historyService';
 import { useAuthStore } from './store/authStore';
 
 // 懒加载历史记录页面，减少首屏加载时间
@@ -36,6 +36,8 @@ function App() {
   const [refreshHistory, setRefreshHistory] = useState(false);
   const [interpretationFallback, setInterpretationFallback] = useState(false);
   const [interpretationError, setInterpretationError] = useState<string | undefined>(undefined);
+  // 本次解读流程已保存的记录 id（用于编辑解读后回写本地与后端）
+  const [sessionReading, setSessionReading] = useState<{ localId: string; backendId: number | null } | null>(null);
 
   const { checkAuth, isAuthenticated } = useAuthStore();
 
@@ -104,10 +106,11 @@ function App() {
     };
 
     saveReadingRecord(record);
+    setSessionReading({ localId: record.id, backendId: null });
 
     if (isAuthenticated) {
       try {
-        await createReadingRecord(
+        const backendRecord = await createReadingRecord(
           finalSelectedCards,
           finalInterpretation,
           currentUserContext,
@@ -120,10 +123,35 @@ function App() {
           finalCustomerStatement,
           finalCustomerQuestion
         );
+        if (backendRecord) {
+          const numId = parseInt(backendRecord.id, 10);
+          setSessionReading(prev =>
+            prev && prev.localId === record.id
+              ? { ...prev, backendId: isNaN(numId) ? null : numId }
+              : prev
+          );
+        }
         setRefreshHistory(prev => !prev);
       } catch (error) {
         console.error('Failed to save reading to backend:', error);
       }
+    }
+  };
+
+  // 用户在解读结果页编辑文本后，同步更新状态并回写已保存的记录
+  const handleInterpretationEdit = (newText: string) => {
+    setInterpretation(newText);
+    if (!sessionReading) return;
+
+    const existing = getReadingRecordById(sessionReading.localId);
+    if (existing) {
+      updateReadingRecordLocal({ ...existing, interpretation: newText });
+    }
+
+    if (isAuthenticated && sessionReading.backendId !== null) {
+      updateBackendReading(sessionReading.backendId, { interpretation: newText })
+        .then(() => setRefreshHistory(prev => !prev))
+        .catch(error => console.error('Failed to update interpretation on backend:', error));
     }
   };
 
@@ -177,6 +205,7 @@ function App() {
     setCustomerInfo('');
     setCustomerStatement('');
     setCustomerQuestion('');
+    setSessionReading(null);
     setRefreshHistory(prev => !prev);
     setView('home');
   };
@@ -273,6 +302,7 @@ function App() {
                     onContinue={handleContinueReading}
                     onGoBack={() => setView('new-reading')}
                     onSave={handleSaveReading}
+                    onInterpretationEdit={handleInterpretationEdit}
                     isFallback={interpretationFallback}
                     errorMessage={interpretationError}
                   />
