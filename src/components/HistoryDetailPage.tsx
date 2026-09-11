@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import { ReadingRecord, ReadingInput } from '../types';
@@ -30,7 +30,66 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
   const [isEditing, setIsEditing] = useState(false);
   const [editingText, setEditingText] = useState(record.interpretation);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  // 牌阵照片：初始取记录中已保存的图片，可在详情页临时插入/更换，用于生成长图
+  const [uploadedImage, setUploadedImage] = useState<string | null>(record.uploadedImage ?? null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { isAuthenticated } = useAuthStore();
+
+  // 图片变化后：更新本地状态、作废旧长图，并持久化到本地记录
+  const persistImage = (imgData: string | null) => {
+    setUploadedImage(imgData);
+    setGeneratedImage(null);
+    canvasRef.current = null;
+
+    const updated: ReadingRecord = {
+      ...record,
+      interpretation,
+      uploadedImage: imgData ?? undefined,
+    };
+    updateReadingRecordLocal(updated);
+    onRecordUpdated?.(updated);
+  };
+
+  const readImageFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('请上传图片文件');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      persistImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [record, interpretation]);
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) readImageFile(file);
+    e.target.value = '';
+  }, [readImageFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) readImageFile(file);
+  }, [readImageFile]);
+
+  const handleRemoveImage = () => {
+    persistImage(null);
+  };
 
   const handleStartEdit = () => {
     setEditingText(interpretation);
@@ -264,30 +323,82 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
         </div>
 
         <div className="relative z-10 p-8">
-          {record.uploadedImage && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mb-8"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            {uploadedImage ? (
               <div className="relative rounded-lg overflow-hidden border-2 border-tarot-gold/30 shadow-md">
                 <div className="flex justify-center bg-tarot-lightgray/20">
-                  <img 
-                    src={record.uploadedImage} 
+                  <img
+                    src={uploadedImage}
                     alt="牌阵照片"
                     className="max-w-full h-auto object-contain"
                     style={{ maxHeight: '500px' }}
                   />
                 </div>
-                <div className="absolute bottom-3 left-0 right-0 text-center">
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center">
                   <div className="inline-block text-tarot-gold font-decorative text-sm bg-black/30 px-4 py-1.5 rounded-full">
                     ✧ 牌阵实拍 ✧
                   </div>
                 </div>
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs px-3 py-1.5 rounded-full bg-black/45 text-white hover:bg-black/60 transition-colors font-crimson"
+                  >
+                    更换照片
+                  </button>
+                  <button
+                    onClick={handleRemoveImage}
+                    className="text-xs px-3 py-1.5 rounded-full bg-black/45 text-white hover:bg-red-500/70 transition-colors font-crimson"
+                  >
+                    移除
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
               </div>
-            </motion.div>
-          )}
+            ) : (
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+                  isDragging
+                    ? 'border-tarot-gold bg-tarot-gold/10'
+                    : 'border-tarot-gold/40 bg-tarot-lightgray/10 hover:border-tarot-gold/60 hover:bg-tarot-gold/5'
+                }`}
+                style={{ minHeight: '200px' }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center justify-center h-full py-8">
+                  <div className="text-tarot-gold text-4xl mb-4">🖼️</div>
+                  <div className="text-tarot-gray font-decorative mb-2">插入牌阵照片</div>
+                  <div className="text-tarot-gray/60 font-crimson text-sm">
+                    拖拽图片到此处，或点击上传（手机可直接拍照）
+                  </div>
+                  <div className="text-tarot-gray/40 font-crimson text-xs mt-2">
+                    支持 JPG、PNG 格式
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -546,10 +657,10 @@ export function HistoryDetailPage({ record, onBack, onRecordUpdated }: HistoryDe
         style={{ position: 'absolute', left: '-9999px', top: 0, width: '600px' }}
       >
         <div style={{ background: '#fcfbf7', padding: '56px 44px 48px', fontFamily: '"Noto Serif SC", "Songti SC", "SimSun", "Georgia", serif' }}>
-          {record.uploadedImage && (
+          {uploadedImage && (
             <div style={{ marginBottom: '32px' }}>
               <img
-                src={record.uploadedImage}
+                src={uploadedImage}
                 alt="牌阵实拍"
                 style={{ width: '100%', display: 'block', borderRadius: '8px', border: '1px solid #ece7db' }}
               />

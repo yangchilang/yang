@@ -37,6 +37,8 @@ function backendToRecord(r: BackendReading): ReadingRecord {
   } catch {
     spread = undefined;
   }
+  // 牌阵照片仅保存在本地，按 ID 从本地记录补回，保证重新打开记录时图片还在
+  const localRecord = getReadingHistory().find((item) => item.id === String(r.id));
   return {
     id: String(r.id),
     selectedCards: JSON.parse(r.cards) as SelectedCard[],
@@ -51,6 +53,7 @@ function backendToRecord(r: BackendReading): ReadingRecord {
     customerStatement: r.customer_statement,
     customerQuestion: r.customer_question,
     spread,
+    uploadedImage: localRecord?.uploadedImage,
   };
 }
 

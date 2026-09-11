@@ -32,6 +32,8 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
       if (isAuthenticated) {
         const data = await fetchReadingHistory();
         if (data) {
+          // 牌阵照片仅保存在本地，按 ID 补回，保证详情页能显示并用于生成长图
+          const localHistory = getReadingHistory();
           const mapped: ReadingRecord[] = data.readings.map((r) => {
             let selectedCards: SelectedCard[] = [];
             try {
@@ -45,6 +47,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
             } catch {
               spread = undefined;
             }
+            const localRecord = localHistory.find((item) => item.id === String(r.id));
             return {
               id: String(r.id),
               selectedCards,
@@ -59,6 +62,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
               customerStatement: r.customer_statement,
               customerQuestion: r.customer_question,
               spread,
+              uploadedImage: localRecord?.uploadedImage,
             };
           });
           setRecords(mapped);
