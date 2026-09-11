@@ -20,16 +20,22 @@ const DEFAULT_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 export async function onRequestPost(context: any) {
   const { request, env } = context;
 
+  // workerd 运行时没有 Node 的全局 process，裸写 process?.env 会因标识符未声明
+  // 而抛 ReferenceError（可选链只能拦截 null/undefined，拦不住未声明标识符），
+  // 且这段代码在下方 try 块之外，异常会直接变成 Cloudflare 1101。
+  // 统一通过 globalThis 安全读取；Pages Functions 正常只依赖 env 绑定。
+  const nodeProcess = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+
   const apiKey: string | undefined =
     (env && (env.VITE_API_KEY || env.DEEPSEEK_API_KEY || env.API_KEY)) ||
-    process?.env?.VITE_API_KEY ||
-    process?.env?.DEEPSEEK_API_KEY ||
-    process?.env?.API_KEY;
+    nodeProcess?.env?.VITE_API_KEY ||
+    nodeProcess?.env?.DEEPSEEK_API_KEY ||
+    nodeProcess?.env?.API_KEY;
 
   const baseUrl: string =
     (env && (env.VITE_API_URL || env.DEEPSEEK_API_URL)) ||
-    process?.env?.VITE_API_URL ||
-    process?.env?.DEEPSEEK_API_URL ||
+    nodeProcess?.env?.VITE_API_URL ||
+    nodeProcess?.env?.DEEPSEEK_API_URL ||
     DEFAULT_API_URL;
 
   if (!apiKey || !apiKey.trim()) {
