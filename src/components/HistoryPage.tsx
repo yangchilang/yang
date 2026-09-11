@@ -216,7 +216,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                     className="cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-decorative text-tarot-gray">{result.spread?.name || '自定义牌阵'}</h4>
+                      <h4 className="font-decorative text-tarot-gray line-clamp-2 flex-1 min-w-0 mr-2">{result.customerQuestion || '未填写问题'}</h4>
                       {result.relatedOrderId && (
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
                           关联记录
@@ -231,9 +231,9 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                         <span className="text-tarot-gray/40">订单号：</span>
                         <span className="text-tarot-gold/70">{result.orderId || '—'}</span>
                       </p>
-                      <p className="text-tarot-gray/70 line-clamp-2">
-                        <span className="text-tarot-gray/40">客户问题：</span>
-                        {result.customerQuestion || '—'}
+                      <p className="text-tarot-gray/70">
+                        <span className="text-tarot-gray/40">牌阵名：</span>
+                        {result.spread?.name || '自定义牌阵'}
                       </p>
                     </div>
                     <div className="mt-3 text-tarot-gold font-crimson text-sm flex items-center gap-1">
@@ -359,8 +359,8 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="text-lg font-decorative text-tarot-gray group-hover:text-tarot-gold transition-colors">
-                    {record.spread?.name || '自定义牌阵'}
+                  <h3 className="text-lg font-decorative text-tarot-gray group-hover:text-tarot-gold transition-colors line-clamp-2">
+                    {record.customerQuestion || '未填写问题'}
                   </h3>
                   <p className="text-tarot-gray/50 font-crimson text-sm mt-0.5">
                     {formatDate(record.createdAt)}
@@ -382,9 +382,9 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                   <span className="text-tarot-gray/40">订单号：</span>
                   <span className="text-tarot-gold/70">{record.orderId || '—'}</span>
                 </p>
-                <p className="text-tarot-gray/70 line-clamp-2">
-                  <span className="text-tarot-gray/40">客户问题：</span>
-                  {record.customerQuestion || '—'}
+                <p className="text-tarot-gray/70">
+                  <span className="text-tarot-gray/40">牌阵名：</span>
+                  {record.spread?.name || '自定义牌阵'}
                 </p>
               </div>
 
