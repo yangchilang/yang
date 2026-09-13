@@ -508,7 +508,7 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
           )}
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <div style={{ fontSize: '32px', color: '#2c2c2c', fontWeight: 600, letterSpacing: '2px' }}>
-              {spread?.name || '塔罗解读'}
+              {spread?.name && spread.name !== '自定义牌阵' ? spread.name : '塔罗解读'}
             </div>
           </div>
           <div style={{ width: '40px', height: '2px', background: '#d4af37', margin: '0 auto 36px' }} />
