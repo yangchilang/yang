@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { spreadsByCategory, spreads, threeCardSpreads } from '../data/spreads';
+import { listCustomSpreads, deleteCustomSpread } from '../services/customSpreadService';
 import { Spread } from '../types';
 
 interface SpreadSelectorProps {
@@ -10,8 +11,16 @@ interface SpreadSelectorProps {
 export function SpreadSelector({ onSelectSpread }: SpreadSelectorProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [customSpreads, setCustomSpreads] = useState<Spread[]>([]);
 
-  const categories = Object.keys(spreadsByCategory);
+  useEffect(() => {
+    setCustomSpreads(listCustomSpreads());
+  }, []);
+
+  const categories = [
+    ...Object.keys(spreadsByCategory),
+    ...(customSpreads.length > 0 ? ['自定义'] : []),
+  ];
 
   const handleSelectSpread = (spread: Spread) => {
     onSelectSpread(spread);
@@ -28,6 +37,13 @@ export function SpreadSelector({ onSelectSpread }: SpreadSelectorProps) {
     onSelectSpread(customSpread);
   };
 
+  const handleDeleteCustomSpread = (id: string) => {
+    if (!window.confirm('确定删除这个自定义牌阵吗？')) return;
+    const remaining = deleteCustomSpread(id);
+    setCustomSpreads(remaining);
+    if (remaining.length === 0) setSelectedCategory(null);
+  };
+
   const filteredSpreads = spreads.filter(spread =>
     spread.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     spread.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,7 +51,9 @@ export function SpreadSelector({ onSelectSpread }: SpreadSelectorProps) {
   );
 
   const filteredByCategory = selectedCategory
-    ? filteredSpreads.filter(spread => spread.category === selectedCategory)
+    ? selectedCategory === '自定义'
+      ? customSpreads
+      : filteredSpreads.filter(spread => spread.category === selectedCategory)
     : [];
 
   return (
@@ -182,9 +200,25 @@ export function SpreadSelector({ onSelectSpread }: SpreadSelectorProps) {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-decorative text-tarot-gray">{spread.name}</h3>
-                    <span className="text-tarot-gold font-crimson text-sm bg-tarot-gold/10 px-2 py-1 rounded">
-                      {spread.positions.length}张牌
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-tarot-gold font-crimson text-sm bg-tarot-gold/10 px-2 py-1 rounded">
+                        {spread.positions.length}张牌
+                      </span>
+                      {selectedCategory === '自定义' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCustomSpread(spread.id);
+                          }}
+                          className="text-tarot-gray/40 hover:text-red-500 transition-colors"
+                          title="删除此牌阵"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-tarot-gray/60 font-crimson text-sm">{spread.description}</p>
                 </motion.div>

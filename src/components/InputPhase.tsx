@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { tarotCards } from '../data/tarotCards';
 import { SpreadSelector } from './SpreadSelector';
+import { saveCustomSpread } from '../services/customSpreadService';
 import { SelectedCard, ReadingInput, Spread } from '../types';
 
 interface InputPhaseProps {
@@ -321,7 +322,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
               </div>
               <h2 className="text-xl font-decorative text-tarot-gray">卡牌详细</h2>
             </div>
-            {selectedSpread?.id === 'custom-spread' && (
+            {selectedSpread?.id.startsWith('custom-spread') && (
               <button
                 onClick={handleAddCard}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-tarot-gold/20 hover:bg-tarot-gold/30 border border-tarot-gold/40 text-tarot-gray hover:text-tarot-gold transition-all font-decorative text-sm"
@@ -370,7 +371,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
                       <span className="text-tarot-gold font-decorative font-bold text-sm">{pos.position}</span>
                     </div>
                     <span className="font-decorative text-tarot-gray text-sm">第 {pos.position} 张牌</span>
-                    {selectedSpread?.id === 'custom-spread' && (
+                    {selectedSpread?.id.startsWith('custom-spread') && (
                       <button
                         onClick={() => handleRemoveCard(pos.position)}
                         className="ml-auto text-red-400 hover:text-red-600 transition-colors"
@@ -459,6 +460,15 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
             animate={{ opacity: 1, y: 0 }}
             onClick={() => {
               if (validateForm() && isComplete) {
+                // 使用自定义牌阵解读时，自动把牌阵（标题、牌数、牌位含义）保存到「自定义」类别，方便复用
+                if (selectedSpread!.id.startsWith('custom-spread')) {
+                  saveCustomSpread(
+                    title,
+                    [...selectedCards]
+                      .sort((a, b) => a.position - b.position)
+                      .map(c => ({ position: c.position, meaning: c.positionMeaning || '' }))
+                  );
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 setTimeout(() => {
                   onSubmit({ 
