@@ -299,6 +299,7 @@ function App() {
                     selectedCards={selectedCards}
                     interpretation={interpretation}
                     spread={spread}
+                    customerQuestion={customerQuestion}
                     onContinue={handleContinueReading}
                     onGoBack={() => setView('new-reading')}
                     onSave={handleSaveReading}

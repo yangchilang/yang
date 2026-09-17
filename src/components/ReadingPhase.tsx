@@ -8,6 +8,7 @@ interface ReadingPhaseProps {
   selectedCards: SelectedCard[];
   interpretation: string;
   spread?: Spread;
+  customerQuestion?: string;
   onContinue: () => void;
   onGoBack: () => void;
   onSave?: (uploadedImage?: string) => void | Promise<void>;
@@ -16,7 +17,7 @@ interface ReadingPhaseProps {
   errorMessage?: string;
 }
 
-export function ReadingPhase({ selectedCards, interpretation, spread, onContinue, onGoBack, onSave, onInterpretationEdit, isFallback, errorMessage }: ReadingPhaseProps) {
+export function ReadingPhase({ selectedCards, interpretation, spread, customerQuestion, onContinue, onGoBack, onSave, onInterpretationEdit, isFallback, errorMessage }: ReadingPhaseProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -508,7 +509,9 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
           )}
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <div style={{ fontSize: '32px', color: '#2c2c2c', fontWeight: 600, letterSpacing: '2px' }}>
-              {spread?.name && spread.name !== '自定义牌阵' ? spread.name : '塔罗解读'}
+              {spread?.id?.startsWith('custom-spread')
+                ? (Array.from(customerQuestion?.trim() || '').slice(0, 10).join('') || '塔罗解读')
+                : (spread?.name || '塔罗解读')}
             </div>
           </div>
           <div style={{ width: '40px', height: '2px', background: '#d4af37', margin: '0 auto 36px' }} />
@@ -525,7 +528,7 @@ export function ReadingPhase({ selectedCards, interpretation, spread, onContinue
               if (block.type === 'card') {
                 const card = selectedCards[block.cardIndex];
                 const cardTitle = card
-                  ? `第${block.cardIndex + 1}张牌，${card.card.nameCn}`
+                  ? `第${block.cardIndex + 1}张牌，${card.card.nameCn}（${card.isReversed ? '逆位' : '正位'}）`
                   : `第${block.cardIndex + 1}张牌`;
                 return (
                   <div key={i} style={{ marginBottom: '34px' }}>
