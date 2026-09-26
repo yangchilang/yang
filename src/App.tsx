@@ -155,26 +155,37 @@ function App() {
     }
   };
 
-  const handleSaveDraft = async () => {
-    if (!orderId.trim() || !title.trim()) {
+  const handleSaveDraft = async (input?: ReadingInput) => {
+    // 优先使用录入页当前表单数据（App 层状态仅在开始解读后才会写入）
+    const finalTitle = input?.title ?? title;
+    const finalOrderId = input?.orderId ?? orderId;
+    const finalSpread = input?.spread ?? spread;
+    const finalSelectedCards = input?.selectedCards ?? selectedCards;
+    const finalCustomerGender = input?.customerGender ?? customerGender;
+    const finalRelatedOrderId = input?.relatedOrderId ?? relatedOrderId;
+    const finalCustomerInfo = input?.customerInfo ?? customerInfo;
+    const finalCustomerStatement = input?.customerStatement ?? customerStatement;
+    const finalCustomerQuestion = input?.customerQuestion ?? customerQuestion;
+
+    if (!finalOrderId.trim() || !finalTitle.trim()) {
       alert('请至少填写标题和订单号');
       return;
     }
-    
+
     const record: ReadingRecord = {
       id: Date.now().toString(),
-      spread: spread || undefined,
-      selectedCards: selectedCards || [],
+      spread: finalSpread || undefined,
+      selectedCards: finalSelectedCards || [],
       interpretation: '',
       userContext: '',
       createdAt: new Date().toISOString(),
-      orderId,
-      title,
-      customerGender,
-      relatedOrderId,
-      customerInfo,
-      customerStatement,
-      customerQuestion,
+      orderId: finalOrderId,
+      title: finalTitle,
+      customerGender: finalCustomerGender,
+      relatedOrderId: finalRelatedOrderId,
+      customerInfo: finalCustomerInfo,
+      customerStatement: finalCustomerStatement,
+      customerQuestion: finalCustomerQuestion,
     };
 
     saveReadingRecord(record);
@@ -182,7 +193,7 @@ function App() {
 
     if (isAuthenticated) {
       try {
-        const result = await createReadingRecord(selectedCards || [], '', '', spread, orderId, title, customerGender, relatedOrderId, customerInfo, customerStatement, customerQuestion);
+        const result = await createReadingRecord(finalSelectedCards || [], '', '', finalSpread, finalOrderId, finalTitle, finalCustomerGender, finalRelatedOrderId, finalCustomerInfo, finalCustomerStatement, finalCustomerQuestion);
         console.log('Draft saved to backend:', result);
       } catch (error) {
         console.error('Failed to save draft to backend:', error);

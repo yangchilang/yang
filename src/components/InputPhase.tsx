@@ -8,7 +8,7 @@ import { SelectedCard, ReadingInput, Spread } from '../types';
 
 interface InputPhaseProps {
   onSubmit: (input: ReadingInput) => void;
-  onSave?: () => void;
+  onSave?: (input: ReadingInput) => void;
 }
 
 type Step = 'spread' | 'combined';
@@ -471,7 +471,18 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={onSave}
+            onClick={() => onSave?.({
+              selectedCards,
+              userContext: '',
+              spread: selectedSpread!,
+              orderId,
+              title,
+              customerGender,
+              relatedOrderId,
+              customerInfo,
+              customerStatement,
+              customerQuestion
+            })}
             className="flex-1 py-4 rounded-xl font-decorative text-xl bg-white border-2 border-tarot-gold/50 text-tarot-gray hover:border-tarot-gold hover:text-tarot-gold transition-all"
           >
             保存草稿
