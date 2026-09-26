@@ -17,6 +17,24 @@ interface HistoryPageProps {
   refreshTrigger?: boolean;
 }
 
+// 卡片大标题在客户问题与牌阵名之间取更简洁的一个；isSpreadName 为 true 时信息行不再重复牌阵名
+function getCardTitle(record: ReadingRecord): { title: string; isSpreadName: boolean } {
+  const question = (record.customerQuestion || '').trim();
+  const spreadName = (record.spread?.name || '').trim();
+  const validSpread = spreadName && spreadName !== '自定义牌阵' ? spreadName : '';
+  if (!question) {
+    return validSpread
+      ? { title: validSpread, isSpreadName: true }
+      : { title: '未填写问题', isSpreadName: false };
+  }
+  if (!validSpread) {
+    return { title: question, isSpreadName: false };
+  }
+  return Array.from(question).length <= Array.from(validSpread).length
+    ? { title: question, isSpreadName: false }
+    : { title: validSpread, isSpreadName: true };
+}
+
 export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: HistoryPageProps) {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -220,7 +238,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                     className="cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-decorative text-tarot-gray line-clamp-2 flex-1 min-w-0 mr-2">{result.customerQuestion || '未填写问题'}</h4>
+                      <h4 className="font-decorative text-tarot-gray line-clamp-2 flex-1 min-w-0 mr-2">{getCardTitle(result).title}</h4>
                       {result.relatedOrderId && (
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
                           关联记录
@@ -235,10 +253,12 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                         <span className="text-tarot-gray/40">订单号：</span>
                         <span className="text-tarot-gold/70">{result.orderId || '—'}</span>
                       </p>
-                      <p className="text-tarot-gray/70">
-                        <span className="text-tarot-gray/40">牌阵名：</span>
-                        {result.spread?.name || '自定义牌阵'}
-                      </p>
+                      {!getCardTitle(result).isSpreadName && (
+                        <p className="text-tarot-gray/70">
+                          <span className="text-tarot-gray/40">牌阵名：</span>
+                          {result.spread?.name || '自定义牌阵'}
+                        </p>
+                      )}
                     </div>
                     <div className="mt-3 text-tarot-gold font-crimson text-sm flex items-center gap-1">
                       查看详情
@@ -364,7 +384,7 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <h3 className="text-lg font-decorative text-tarot-gray group-hover:text-tarot-gold transition-colors line-clamp-2">
-                    {record.customerQuestion || '未填写问题'}
+                    {getCardTitle(record).title}
                   </h3>
                   <p className="text-tarot-gray/50 font-crimson text-sm mt-0.5">
                     {formatDate(record.createdAt)}
@@ -386,10 +406,12 @@ export function HistoryPage({ onViewDetail, onNewReading, refreshTrigger }: Hist
                   <span className="text-tarot-gray/40">订单号：</span>
                   <span className="text-tarot-gold/70">{record.orderId || '—'}</span>
                 </p>
-                <p className="text-tarot-gray/70">
-                  <span className="text-tarot-gray/40">牌阵名：</span>
-                  {record.spread?.name || '自定义牌阵'}
-                </p>
+                {!getCardTitle(record).isSpreadName && (
+                  <p className="text-tarot-gray/70">
+                    <span className="text-tarot-gray/40">牌阵名：</span>
+                    {record.spread?.name || '自定义牌阵'}
+                  </p>
+                )}
               </div>
 
               <div className="mt-4 text-tarot-gold/60 font-crimson text-sm flex items-center gap-1">
