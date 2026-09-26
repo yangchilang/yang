@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { tarotCards } from '../data/tarotCards';
 import { SpreadSelector } from './SpreadSelector';
 import { saveCustomSpread } from '../services/customSpreadService';
+import { getReadingHistory, searchReadings } from '../services/historyService';
 import { SelectedCard, ReadingInput, Spread } from '../types';
 
 interface InputPhaseProps {
@@ -70,6 +71,25 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // 检查订单号是否已被使用（对比本地记录与后端记录，忽略首尾空格，不区分大小写）
+  const checkOrderIdDuplicate = async (value: string): Promise<boolean> => {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return false;
+    if (getReadingHistory().some(r => (r.orderId || '').trim().toLowerCase() === normalized)) {
+      return true;
+    }
+    const backendResults = await searchReadings(value.trim());
+    return backendResults.some(r => (r.orderId || '').trim().toLowerCase() === normalized);
+  };
+
+  // 订单号输入框失焦时即提示重复
+  const handleOrderIdBlur = async () => {
+    if (!orderId.trim()) return;
+    if (await checkOrderIdDuplicate(orderId)) {
+      setErrors(prev => ({ ...prev, orderId: '订单号已存在，请勿重复使用' }));
+    }
   };
 
   const handleUpdateReversed = (position: number, isReversed: boolean) => {
@@ -224,6 +244,7 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
                   setOrderId(e.target.value);
                   if (errors.orderId) setErrors(prev => ({ ...prev, orderId: '' }));
                 }}
+                onBlur={handleOrderIdBlur}
                 placeholder="请输入订单号，如 d26053001"
                 className={`w-full bg-tarot-lightgray/30 border-2 rounded-lg px-4 py-3 text-tarot-gray font-crimson placeholder:text-tarot-gray/40 focus:outline-none transition-colors ${
                   errors.orderId ? 'border-red-400' : 'border-tarot-gold/40 focus:border-tarot-gold'
@@ -458,33 +479,37 @@ export function InputPhase({ onSubmit, onSave }: InputPhaseProps) {
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={() => {
-              if (validateForm() && isComplete) {
-                // 使用自定义牌阵解读时，自动把牌阵（标题、牌数、牌位含义）保存到「自定义」类别，方便复用
-                if (selectedSpread!.id.startsWith('custom-spread')) {
-                  saveCustomSpread(
-                    title,
-                    [...selectedCards]
-                      .sort((a, b) => a.position - b.position)
-                      .map(c => ({ position: c.position, meaning: c.positionMeaning || '' }))
-                  );
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setTimeout(() => {
-                  onSubmit({ 
-                    selectedCards, 
-                    userContext: '', 
-                    spread: selectedSpread!, 
-                    orderId,
-                    title,
-                    customerGender,
-                    relatedOrderId,
-                    customerInfo,
-                    customerStatement,
-                    customerQuestion
-                  });
-                }, 500);
+            onClick={async () => {
+              if (!validateForm() || !isComplete) return;
+              // 提交前最终拦截：订单号与已有记录重复则阻止提交
+              if (await checkOrderIdDuplicate(orderId)) {
+                setErrors(prev => ({ ...prev, orderId: '订单号已存在，请勿重复使用' }));
+                return;
               }
+              // 使用自定义牌阵解读时，自动把牌阵（标题、牌数、牌位含义）保存到「自定义」类别，方便复用
+              if (selectedSpread!.id.startsWith('custom-spread')) {
+                saveCustomSpread(
+                  title,
+                  [...selectedCards]
+                    .sort((a, b) => a.position - b.position)
+                    .map(c => ({ position: c.position, meaning: c.positionMeaning || '' }))
+                );
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setTimeout(() => {
+                onSubmit({
+                  selectedCards,
+                  userContext: '',
+                  spread: selectedSpread!,
+                  orderId,
+                  title,
+                  customerGender,
+                  relatedOrderId,
+                  customerInfo,
+                  customerStatement,
+                  customerQuestion
+                });
+              }, 500);
             }}
             disabled={!isComplete}
             className="flex-1 py-4 rounded-xl font-decorative text-xl bg-gradient-to-r from-tarot-gold to-yellow-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl hover:shadow-tarot-gold/30 transition-all"
